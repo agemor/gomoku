@@ -1,0 +1,28 @@
+{
+  "name": "omok.io",
+  "version": "1.0.0",
+  "description": "Online Omok Playing",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agemor/omok.io.git"
+  },
+  "author": "HyunJun Kim",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/agemor/omok.io/issues"
+  },
+  "homepage": "https://github.com/agemor/omok.io#readme",
+  "devDependencies": {
+    "babel-core": "^6.24.1",
+    "babel-loader": "^7.0.0",
+    "babel-preset-es2015": "^6.24.1",
+    "copy-webpack-plugin": "^4.0.1"
+  },
+  "dependencies": {
+    "pixi.js": "^4.5.1"
+  }
+}
