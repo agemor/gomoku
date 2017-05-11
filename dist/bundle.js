@@ -19719,6 +19719,10 @@ var _pixi = __webpack_require__(34);
 
 var PIXI = _interopRequireWildcard(_pixi);
 
+var _OmokResource = __webpack_require__(192);
+
+var _OmokResource2 = _interopRequireDefault(_OmokResource);
+
 var _OmokCanvas = __webpack_require__(95);
 
 var _OmokCanvas2 = _interopRequireDefault(_OmokCanvas);
@@ -19737,13 +19741,23 @@ var OmokGame = function () {
     function OmokGame() {
         _classCallCheck(this, OmokGame);
 
-        this.canvas = new _OmokCanvas2.default(800, 800);
-        this.board = new _OmokBoard2.default();
-
-        this.canvas.addElement(this.board);
+        this.initialize();
     }
 
     _createClass(OmokGame, [{
+        key: "initialize",
+        value: function initialize() {
+            var _this = this;
+
+            this.canvas = new _OmokCanvas2.default(800, 800);
+            this.resources = new _OmokResource2.default();
+
+            this.resources.load(function () {
+                _this.board = new _OmokBoard2.default();
+                _this.canvas.addElement(_this.board);
+            });
+        }
+    }, {
         key: "getDOMElement",
         value: function getDOMElement() {
             return this.canvas.renderer.view;
@@ -20746,15 +20760,19 @@ var _pixi = __webpack_require__(34);
 
 var PIXI = _interopRequireWildcard(_pixi);
 
+var _OmokResource = __webpack_require__(192);
+
+var _OmokResource2 = _interopRequireDefault(_OmokResource);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var OmokBoard = function () {
     function OmokBoard() {
-        var _this = this;
-
-        var boardSize = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 19;
+        var boardSize = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 18;
 
         _classCallCheck(this, OmokBoard);
 
@@ -20773,16 +20791,16 @@ var OmokBoard = function () {
         // 그래픽 인터페이스
         this.graphics = new PIXI.Container();
 
-        PIXI.loader.add("images/board_texture.jpg").load(function () {
-            _this.drawBoardTexture();
-            _this.drawBoardGridLines();
-        });
+        this.resources = new _OmokResource2.default();
+
+        this.drawBoardTexture();
+        this.drawBoardGridLines();
     }
 
     _createClass(OmokBoard, [{
         key: "drawBoardTexture",
         value: function drawBoardTexture() {
-            var boardTexture = PIXI.loader.resources["images/board_texture.jpg"].texture;
+            var boardTexture = this.resources.get("OMOK_BOARD_TEXTURE").texture;
             var boardSpriteSize = (this.boardSize + 2) * this.gridSize;
             var boardSprite = new PIXI.extras.TilingSprite(boardTexture, boardSpriteSize, boardSpriteSize);
             this.graphics.addChild(boardSprite);
@@ -20790,7 +20808,7 @@ var OmokBoard = function () {
     }, {
         key: "drawBoardGridLines",
         value: function drawBoardGridLines() {
-            var _this2 = this;
+            var _this = this;
 
             var gridLines = new PIXI.Graphics();
             gridLines.lineStyle(1, this.gridColor, 1);
@@ -20809,7 +20827,7 @@ var OmokBoard = function () {
 
             // 화점
             var centrify = function centrify(n) {
-                return (n * Math.floor(_this2.boardSize / 3) + 1 + Math.ceil(_this2.boardSize / 6)) * _this2.gridSize;
+                return (n * Math.floor(_this.boardSize / 3) + 1 + Math.ceil(_this.boardSize / 6)) * _this.gridSize;
             };
             for (var i = 0; i < 9; i++) {
                 var flowerDot = new PIXI.Graphics();
@@ -40698,6 +40716,81 @@ function blobMiddlewareFactory() {
     };
 }
 //# sourceMappingURL=blob.js.map
+
+/***/ }),
+/* 192 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var instance = null;
+
+var OmokResources = function () {
+    function OmokResources() {
+        _classCallCheck(this, OmokResources);
+
+        if (!instance) {
+            instance = this;
+        } else {
+            return instance;
+        }
+
+        this.resources = [];
+        this.resourcesList = [["OMOK_BOARD_TEXTURE", "images/board_texture.jpg"], ["OMOK_STONE_BLACK", "images/stone_black.png"], ["OMOK_STONE_WHITE", "images/stone_white.png"]];
+    }
+
+    /**
+     * 리소스를 가져온다.
+     */
+
+
+    _createClass(OmokResources, [{
+        key: "get",
+        value: function get(resourceName) {
+            var resourceId = null;
+            for (var i = 0; i < this.resourcesList.length; i++) {
+                if (this.resourcesList[i][0] == resourceName) {
+                    resourceId = this.resourcesList[i][1];
+                }
+            }
+            if (resourceId == null) {
+                return null;
+            }
+            return PIXI.loader.resources[resourceId];
+        }
+
+        /**
+         * 리소스를 로드한다.
+         */
+
+    }, {
+        key: "load",
+        value: function load() {
+            var onComplete = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : function () {};
+
+
+            // 대기열에 추가
+            for (var i = 0; i < this.resourcesList.length; i++) {
+                PIXI.loader.add(this.resourcesList[i][1]);
+            }
+
+            PIXI.loader.load(onComplete);
+        }
+    }]);
+
+    return OmokResources;
+}();
+
+exports.default = OmokResources;
 
 /***/ })
 /******/ ]);

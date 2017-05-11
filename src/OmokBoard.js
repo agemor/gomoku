@@ -1,7 +1,8 @@
 import * as PIXI from "pixi.js";
+import OmokResource from "./OmokResource";
 
 export default class OmokBoard {
-    constructor(boardSize = 19) {
+    constructor(boardSize = 18) {
 
         // 오목판 사이즈
         this.boardSize = boardSize;
@@ -18,14 +19,14 @@ export default class OmokBoard {
         // 그래픽 인터페이스
         this.graphics = new PIXI.Container();
 
-        PIXI.loader.add("images/board_texture.jpg").load(() => {
-            this.drawBoardTexture();
-            this.drawBoardGridLines();
-        });
+        this.resources = new OmokResource();
+
+        this.drawBoardTexture();
+        this.drawBoardGridLines();
     }
 
     drawBoardTexture() {
-        var boardTexture = PIXI.loader.resources["images/board_texture.jpg"].texture;
+        var boardTexture = this.resources.get("OMOK_BOARD_TEXTURE").texture;
         var boardSpriteSize = (this.boardSize + 2) * this.gridSize
         var boardSprite = new PIXI.extras.TilingSprite(boardTexture, boardSpriteSize, boardSpriteSize);
         this.graphics.addChild(boardSprite);
