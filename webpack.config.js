@@ -1,6 +1,8 @@
 var path = require('path');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 
+
+
 module.exports = {
     entry: './src/index.js',
     output: {
@@ -17,6 +19,7 @@ module.exports = {
     plugins: [
         new CopyWebpackPlugin([
             { from: 'src/index.html' },
+            { from: 'src/images', to: 'images'}
         ]),
     ]
 }
