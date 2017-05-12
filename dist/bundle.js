@@ -19758,7 +19758,7 @@ var OmokGame = function () {
 
                 _this.board.placeStone(true, 3, 3);
             });
-
+            this.mm = false;
             // 이벤트 리스너 등록
             this.canvas.onMouseMove(function (event) {
                 _this.onMouseMove(event);
@@ -19769,26 +19769,19 @@ var OmokGame = function () {
         }
     }, {
         key: "onMouseMove",
-        value: function onMouseMove(event) {}
+        value: function onMouseMove(event) {
+            var gridPosition = this.board.getGridPosition(event.x, event.y);
+
+            this.board.placeHintStone(true, gridPosition.x, gridPosition.y);
+        }
     }, {
         key: "onMouseClick",
         value: function onMouseClick(event) {
-            console.log(event);
 
-            var gridSize = this.board.gridSize;
-            var boardSize = this.board.boardSize;
+            var gridPosition = this.board.getGridPosition(event.x, event.y);
 
-            var gridX = Math.round(event.x / gridSize) - 1;
-            var gridY = Math.round(event.y / gridSize) - 1;
-
-            var checkBoundary = function checkBoundary(n) {
-                return n < 0 ? 0 : n > boardSize ? boardSize : n;
-            };
-
-            gridX = checkBoundary(gridX);
-            gridY = checkBoundary(gridY);
-
-            this.board.placeStone(true, gridX, gridY);
+            this.board.placeStone(this.mm, gridPosition.x, gridPosition.y);
+            this.mm = !this.mm;
         }
     }, {
         key: "getDOMElement",
@@ -20836,11 +20829,38 @@ var OmokBoard = function () {
             this.placedStones.push(null);
         }
 
+        // 포석 힌트
+        this.hintStoneBlack = new _OmokStone2.default(false, true);
+        this.hintStoneWhite = new _OmokStone2.default(true, true);
+
         this.drawBoardTexture();
         this.drawBoardGridLines();
     }
 
     _createClass(OmokBoard, [{
+        key: "placeHintStone",
+        value: function placeHintStone(stoneColor, x, y) {
+            this.displaceHintStone(stoneColor);
+            if (stoneColor) {
+                this.hintStoneWhite.graphics.x = this.gridSize * (x + 1);
+                this.hintStoneWhite.graphics.y = this.gridSize * (y + 1);
+                this.graphics.addChild(this.hintStoneWhite.graphics);
+            } else {
+                this.hintStoneBlack.graphics.x = this.gridSize * (x + 1);
+                this.hintStoneBlack.graphics.y = this.gridSize * (y + 1);
+                this.graphics.addChild(this.hintStoneBlack.graphics);
+            }
+        }
+    }, {
+        key: "displaceHintStone",
+        value: function displaceHintStone(stoneColor) {
+            if (stoneColor) {
+                this.graphics.removeChild(this.hintStoneWhite.graphics);
+            } else {
+                this.graphics.removeChild(this.hintStoneBlack.graphics);
+            }
+        }
+    }, {
         key: "placeStone",
         value: function placeStone(stoneColor, x, y) {
             // 이미 놓여진 돌이 있는지 검사
@@ -20849,15 +20869,37 @@ var OmokBoard = function () {
                 stone.graphics.x = this.gridSize * (x + 1);
                 stone.graphics.y = this.gridSize * (y + 1);
                 this.graphics.addChild(stone.graphics);
+
+                this.placedStones[x + this.boardSize * y] = stone;
             }
         }
     }, {
         key: "displaceStone",
         value: function displaceStone(x, y) {
             if (this.placedStones[x + this.boardSize * y] != null) {
-                this.graphics.removeChild(this.placedStones[x + this.boardSize * y]);
+                this.graphics.removeChild(this.placedStones[x + this.boardSize * y].graphics);
                 this.placedStones[x + this.boardSize * y] = null;
             }
+        }
+    }, {
+        key: "getGridPosition",
+        value: function getGridPosition(x, y) {
+            var _this = this;
+
+            var offsetX = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+            var offsetY = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
+
+            var gridX = Math.round((x - this.gridSize * 1) / this.gridSize);
+            var gridY = Math.round((y - this.gridSize * 1) / this.gridSize);
+
+            var checkBoundary = function checkBoundary(n) {
+                return n < 0 ? 0 : n > _this.boardSize ? _this.boardSize : n;
+            };
+
+            gridX = checkBoundary(gridX);
+            gridY = checkBoundary(gridY);
+
+            return { x: gridX, y: gridY };
         }
     }, {
         key: "drawBoardTexture",
@@ -20870,7 +20912,7 @@ var OmokBoard = function () {
     }, {
         key: "drawBoardGridLines",
         value: function drawBoardGridLines() {
-            var _this = this;
+            var _this2 = this;
 
             var gridLines = new PIXI.Graphics();
             gridLines.lineStyle(1, this.gridColor, 1);
@@ -20889,7 +20931,7 @@ var OmokBoard = function () {
 
             // 화점
             var centrify = function centrify(n) {
-                return (n * Math.floor(_this.boardSize / 3) + 1 + Math.ceil(_this.boardSize / 6)) * _this.gridSize;
+                return (n * Math.floor(_this2.boardSize / 3) + 1 + Math.ceil(_this2.boardSize / 6)) * _this2.gridSize;
             };
             for (var i = 0; i < 9; i++) {
                 var flowerDot = new PIXI.Graphics();
@@ -40968,11 +41010,14 @@ var OmokStone = function () {
      */
     function OmokStone() {
         var stoneColor = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+        var hinting = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
 
         _classCallCheck(this, OmokStone);
 
         // 돌 색깔
         this.stoneColor = stoneColor;
+
+        this.hinting = hinting;
 
         this.stoneSize = 30;
 
@@ -40991,6 +41036,11 @@ var OmokStone = function () {
             var stoneSprite = new PIXI.Sprite(stoneTexture);
             stoneSprite.width = stoneSprite.height = this.stoneSize;
             stoneSprite.anchor.set(0.5, 0.5);
+
+            if (this.hinting) {
+                stoneSprite.alpha = 0.4;
+            }
+
             this.graphics.addChild(stoneSprite);
         }
     }]);

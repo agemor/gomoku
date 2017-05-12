@@ -7,10 +7,12 @@ export default class OmokStone {
      * 검은색: false
      * 하얀색: true
      */
-    constructor(stoneColor = true) {
+    constructor(stoneColor = true, hinting = false) {
 
         // 돌 색깔
         this.stoneColor = stoneColor;
+
+        this.hinting = hinting;
 
         this.stoneSize = 30;
 
@@ -27,6 +29,11 @@ export default class OmokStone {
         let stoneSprite = new PIXI.Sprite(stoneTexture);
         stoneSprite.width = stoneSprite.height = this.stoneSize;
         stoneSprite.anchor.set(0.5, 0.5);
+
+        if (this.hinting) {
+            stoneSprite.alpha = 0.4;
+        }
+
         this.graphics.addChild(stoneSprite);
     }
 

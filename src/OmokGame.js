@@ -18,7 +18,7 @@ export default class OmokGame {
 
             this.board.placeStone(true, 3, 3);
         });
-
+        this.mm = false;
         // 이벤트 리스너 등록
         this.canvas.onMouseMove((event) => {
             this.onMouseMove(event);
@@ -30,25 +30,19 @@ export default class OmokGame {
     }
 
     onMouseMove(event) {
+        let gridPosition = this.board.getGridPosition(event.x, event.y); 
 
+        this.board.placeHintStone(true, gridPosition.x, gridPosition.y);
     }
 
     onMouseClick(event) {
-        console.log(event)
+        
+        let gridPosition = this.board.getGridPosition(event.x, event.y); 
 
-        let gridSize = this.board.gridSize;
-        let boardSize = this.board.boardSize;
-
-        let gridX = Math.round(event.x / gridSize) - 1;
-        let gridY = Math.round(event.y / gridSize) - 1;
-
-        let checkBoundary = n => n < 0 ? 0 : (n > boardSize ? boardSize : n);
-
-        gridX = checkBoundary(gridX);
-        gridY = checkBoundary(gridY);
-
-        this.board.placeStone(true, gridX, gridY);
+        this.board.placeStone(this.mm, gridPosition.x, gridPosition.y);
+        this.mm = !this.mm;
     }
+
 
    
     getDOMElement() {

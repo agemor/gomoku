@@ -28,8 +28,33 @@ export default class OmokBoard {
             this.placedStones.push(null);
         }
 
+        // 포석 힌트
+        this.hintStoneBlack = new OmokStone(false, true);
+        this.hintStoneWhite = new OmokStone(true, true);
+
         this.drawBoardTexture();
         this.drawBoardGridLines();
+    }
+
+    placeHintStone(stoneColor, x, y) {
+        this.displaceHintStone(stoneColor);
+        if (stoneColor) {
+            this.hintStoneWhite.graphics.x = this.gridSize * (x + 1);
+            this.hintStoneWhite.graphics.y = this.gridSize * (y + 1);
+            this.graphics.addChild(this.hintStoneWhite.graphics);
+        } else {
+            this.hintStoneBlack.graphics.x = this.gridSize * (x + 1);
+            this.hintStoneBlack.graphics.y = this.gridSize * (y + 1);
+            this.graphics.addChild(this.hintStoneBlack.graphics);
+        }
+    }
+
+    displaceHintStone(stoneColor) {
+        if (stoneColor) {
+            this.graphics.removeChild(this.hintStoneWhite.graphics);
+        } else {
+            this.graphics.removeChild(this.hintStoneBlack.graphics);
+        }
     }
 
     placeStone(stoneColor, x, y) {
@@ -39,14 +64,28 @@ export default class OmokBoard {
             stone.graphics.x = this.gridSize * (x + 1);
             stone.graphics.y = this.gridSize * (y + 1);
             this.graphics.addChild(stone.graphics);
+
+            this.placedStones[x + this.boardSize * y] = stone;
         }
     }
 
     displaceStone(x, y) {
         if (this.placedStones[x + this.boardSize * y] != null) {
-            this.graphics.removeChild(this.placedStones[x + this.boardSize * y]);
+            this.graphics.removeChild(this.placedStones[x + this.boardSize * y].graphics);
             this.placedStones[x + this.boardSize * y] = null;
         }
+    }
+
+    getGridPosition(x, y, offsetX = 0, offsetY = 0) {
+        let gridX = Math.round((x - this.gridSize * 1) / this.gridSize);
+        let gridY = Math.round((y - this.gridSize * 1) / this.gridSize);
+
+        let checkBoundary = n => n < 0 ? 0 : (n > this.boardSize ? this.boardSize : n);
+
+        gridX = checkBoundary(gridX);
+        gridY = checkBoundary(gridY);
+
+        return { x: gridX, y: gridY };
     }
 
     drawBoardTexture() {
