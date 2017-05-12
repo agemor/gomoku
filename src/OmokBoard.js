@@ -3,7 +3,7 @@ import OmokResource from "./OmokResource";
 import OmokStone from "./OmokStone";
 
 export default class OmokBoard {
-    constructor(gridSize, boardSize = 18) {
+    constructor(gridSize, boardSize = 19) {
 
         // 그리드 사이즈
         this.gridSize = gridSize;
@@ -24,8 +24,10 @@ export default class OmokBoard {
 
         // 놓여진 돌들
         this.placedStones = [];
+        this.placement = [];
         for (let i = 0; i < boardSize * boardSize; i++) {
             this.placedStones.push(null);
+            this.placement.push(0);
         }
 
         // 포석 힌트
@@ -65,6 +67,7 @@ export default class OmokBoard {
             stone.graphics.y = this.gridSize * (y + 1);
             this.graphics.addChild(stone.graphics);
 
+            this.placement[x + this.boardSize * y] = stoneColor ? 1 : 2;
             this.placedStones[x + this.boardSize * y] = stone;
         }
     }
@@ -72,15 +75,17 @@ export default class OmokBoard {
     displaceStone(x, y) {
         if (this.placedStones[x + this.boardSize * y] != null) {
             this.graphics.removeChild(this.placedStones[x + this.boardSize * y].graphics);
+
+            this.placement[x + this.boardSize * y] = 0;
             this.placedStones[x + this.boardSize * y] = null;
         }
     }
 
     getGridPosition(x, y, offsetX = 0, offsetY = 0) {
-        let gridX = Math.round((x - this.gridSize * 1) / this.gridSize);
-        let gridY = Math.round((y - this.gridSize * 1) / this.gridSize);
+        let gridX = Math.round((x - this.gridSize) / this.gridSize);
+        let gridY = Math.round((y - this.gridSize) / this.gridSize);
 
-        let checkBoundary = n => n < 0 ? 0 : (n > this.boardSize ? this.boardSize : n);
+        let checkBoundary = n => n < 0 ? 0 : (n >= this.boardSize ? this.boardSize - 1 : n);
 
         gridX = checkBoundary(gridX);
         gridY = checkBoundary(gridY);
@@ -90,7 +95,7 @@ export default class OmokBoard {
 
     drawBoardTexture() {
         var boardTexture = this.resources.get("OMOK_BOARD_TEXTURE").texture;
-        var boardSpriteSize = (this.boardSize + 2) * this.gridSize
+        var boardSpriteSize = (this.boardSize + 1) * this.gridSize
         var boardSprite = new PIXI.extras.TilingSprite(boardTexture, boardSpriteSize, boardSpriteSize);
         this.graphics.addChild(boardSprite);
     }
@@ -100,19 +105,19 @@ export default class OmokBoard {
         gridLines.lineStyle(1, this.gridColor, 1);
 
         // 가로줄
-        for (var y = 0; y <= this.boardSize; y++) {
+        for (var y = 0; y < this.boardSize; y++) {
             gridLines.moveTo(this.gridSize, (y + 1) * this.gridSize);
-            gridLines.lineTo(this.gridSize * (this.boardSize + 1), (y + 1) * this.gridSize);
+            gridLines.lineTo(this.gridSize * this.boardSize, (y + 1) * this.gridSize);
         }
 
         // 세로줄
-        for (var x = 0; x <= this.boardSize; x++) {
+        for (var x = 0; x < this.boardSize; x++) {
             gridLines.moveTo((x + 1) * this.gridSize, this.gridSize);
-            gridLines.lineTo((x + 1) * this.gridSize, this.gridSize * (this.boardSize + 1));
+            gridLines.lineTo((x + 1) * this.gridSize, this.gridSize * this.boardSize);
         }
 
         // 화점
-        let centrify = n => ((n) * Math.floor(this.boardSize / 3) + 1 + Math.ceil(this.boardSize / 6)) * this.gridSize;
+        let centrify = n => ((n) * Math.floor(this.boardSize / 3) + Math.ceil(this.boardSize / 6)) * this.gridSize;
         for (var i = 0; i < 9; i++) {
             var flowerDot = new PIXI.Graphics();
             flowerDot.beginFill(this.gridColor);

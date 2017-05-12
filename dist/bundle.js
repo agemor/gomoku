@@ -19731,6 +19731,10 @@ var _OmokBoard = __webpack_require__(94);
 
 var _OmokBoard2 = _interopRequireDefault(_OmokBoard);
 
+var _OmokAlgorithm = __webpack_require__(194);
+
+var _OmokAlgorithm2 = _interopRequireDefault(_OmokAlgorithm);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
@@ -19751,6 +19755,7 @@ var OmokGame = function () {
 
             this.canvas = new _OmokCanvas2.default(800, 800);
             this.resources = new _OmokResource2.default();
+            this.algorithm = new _OmokAlgorithm2.default();
 
             this.resources.load(function () {
                 _this.board = new _OmokBoard2.default(35);
@@ -19782,6 +19787,8 @@ var OmokGame = function () {
 
             this.board.placeStone(this.mm, gridPosition.x, gridPosition.y);
             this.mm = !this.mm;
+
+            console.log(this.algorithm.checkVictory(gridPosition.x, gridPosition.y, this.board));
         }
     }, {
         key: "getDOMElement",
@@ -20802,7 +20809,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var OmokBoard = function () {
     function OmokBoard(gridSize) {
-        var boardSize = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 18;
+        var boardSize = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 19;
 
         _classCallCheck(this, OmokBoard);
 
@@ -20825,8 +20832,10 @@ var OmokBoard = function () {
 
         // 놓여진 돌들
         this.placedStones = [];
+        this.placement = [];
         for (var i = 0; i < boardSize * boardSize; i++) {
             this.placedStones.push(null);
+            this.placement.push(0);
         }
 
         // 포석 힌트
@@ -20870,6 +20879,7 @@ var OmokBoard = function () {
                 stone.graphics.y = this.gridSize * (y + 1);
                 this.graphics.addChild(stone.graphics);
 
+                this.placement[x + this.boardSize * y] = stoneColor ? 1 : 2;
                 this.placedStones[x + this.boardSize * y] = stone;
             }
         }
@@ -20878,6 +20888,8 @@ var OmokBoard = function () {
         value: function displaceStone(x, y) {
             if (this.placedStones[x + this.boardSize * y] != null) {
                 this.graphics.removeChild(this.placedStones[x + this.boardSize * y].graphics);
+
+                this.placement[x + this.boardSize * y] = 0;
                 this.placedStones[x + this.boardSize * y] = null;
             }
         }
@@ -20889,11 +20901,11 @@ var OmokBoard = function () {
             var offsetX = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
             var offsetY = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
 
-            var gridX = Math.round((x - this.gridSize * 1) / this.gridSize);
-            var gridY = Math.round((y - this.gridSize * 1) / this.gridSize);
+            var gridX = Math.round((x - this.gridSize) / this.gridSize);
+            var gridY = Math.round((y - this.gridSize) / this.gridSize);
 
             var checkBoundary = function checkBoundary(n) {
-                return n < 0 ? 0 : n > _this.boardSize ? _this.boardSize : n;
+                return n < 0 ? 0 : n >= _this.boardSize ? _this.boardSize - 1 : n;
             };
 
             gridX = checkBoundary(gridX);
@@ -20905,7 +20917,7 @@ var OmokBoard = function () {
         key: "drawBoardTexture",
         value: function drawBoardTexture() {
             var boardTexture = this.resources.get("OMOK_BOARD_TEXTURE").texture;
-            var boardSpriteSize = (this.boardSize + 2) * this.gridSize;
+            var boardSpriteSize = (this.boardSize + 1) * this.gridSize;
             var boardSprite = new PIXI.extras.TilingSprite(boardTexture, boardSpriteSize, boardSpriteSize);
             this.graphics.addChild(boardSprite);
         }
@@ -20918,20 +20930,20 @@ var OmokBoard = function () {
             gridLines.lineStyle(1, this.gridColor, 1);
 
             // 가로줄
-            for (var y = 0; y <= this.boardSize; y++) {
+            for (var y = 0; y < this.boardSize; y++) {
                 gridLines.moveTo(this.gridSize, (y + 1) * this.gridSize);
-                gridLines.lineTo(this.gridSize * (this.boardSize + 1), (y + 1) * this.gridSize);
+                gridLines.lineTo(this.gridSize * this.boardSize, (y + 1) * this.gridSize);
             }
 
             // 세로줄
-            for (var x = 0; x <= this.boardSize; x++) {
+            for (var x = 0; x < this.boardSize; x++) {
                 gridLines.moveTo((x + 1) * this.gridSize, this.gridSize);
-                gridLines.lineTo((x + 1) * this.gridSize, this.gridSize * (this.boardSize + 1));
+                gridLines.lineTo((x + 1) * this.gridSize, this.gridSize * this.boardSize);
             }
 
             // 화점
             var centrify = function centrify(n) {
-                return (n * Math.floor(_this2.boardSize / 3) + 1 + Math.ceil(_this2.boardSize / 6)) * _this2.gridSize;
+                return (n * Math.floor(_this2.boardSize / 3) + Math.ceil(_this2.boardSize / 6)) * _this2.gridSize;
             };
             for (var i = 0; i < 9; i++) {
                 var flowerDot = new PIXI.Graphics();
@@ -41049,6 +41061,78 @@ var OmokStone = function () {
 }();
 
 exports.default = OmokStone;
+
+/***/ }),
+/* 194 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var OmokAlgorithm = function () {
+    function OmokAlgorithm() {
+        _classCallCheck(this, OmokAlgorithm);
+    }
+
+    _createClass(OmokAlgorithm, [{
+        key: "analyze",
+        value: function analyze() {}
+
+        /**
+         * 다섯개가 연달아 있는지 체크
+         */
+
+    }, {
+        key: "checkVictory",
+        value: function checkVictory(x, y, board) {
+
+            // 돌 연산자
+            var at = function at(sx, sy) {
+                return board.placement[sy * board.boardSize + sx];
+            };
+            var inbound = function inbound(sx, sy) {
+                return sx >= 0 && sy >= 0 && sx < board.boardSize && sy < board.boardSize;
+            };
+
+            // 기준 돌
+            var criterion = at(x, y);
+
+            // 흩어짐 체크
+            var check = function check(a, b, c, d) {
+                var i = 0,
+                    j = 0;
+                while (at(x + a * i, y + b * i) == criterion && inbound(x + a * i, y + b * i)) {
+                    i++;
+                }
+                while (at(x + c * j, y + d * j) == criterion && inbound(x + c * j, y + d * j)) {
+                    j++;
+                }
+                return i + j == 6;
+            };
+
+            // 가로, 세로, 대각선 검사
+            return check(-1, 0, 1, 0) || check(0, -1, 0, 1) || check(-1, -1, 1, 1) || check(1, -1, -1, 1);
+        }
+    }, {
+        key: "checkTripleTriple",
+        value: function checkTripleTriple() {}
+    }, {
+        key: "checkQuadQuad",
+        value: function checkQuadQuad() {}
+    }]);
+
+    return OmokAlgorithm;
+}();
+
+exports.default = OmokAlgorithm;
 
 /***/ })
 /******/ ]);

@@ -2,6 +2,7 @@ import * as PIXI from "pixi.js";
 import OmokResource from "./OmokResource";
 import OmokCanvas from "./OmokCanvas";
 import OmokBoard from "./OmokBoard";
+import OmokAlgorithm from "./OmokAlgorithm";
 
 export default class OmokGame {
     constructor() {
@@ -11,6 +12,7 @@ export default class OmokGame {
     initialize() {
         this.canvas = new OmokCanvas(800, 800);
         this.resources = new OmokResource();
+        this.algorithm = new OmokAlgorithm();
 
         this.resources.load(() => {
             this.board = new OmokBoard(35);
@@ -41,6 +43,8 @@ export default class OmokGame {
 
         this.board.placeStone(this.mm, gridPosition.x, gridPosition.y);
         this.mm = !this.mm;
+
+        console.log(this.algorithm.checkVictory(gridPosition.x, gridPosition.y, this.board));
     }
 
 
