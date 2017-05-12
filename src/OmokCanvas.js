@@ -7,6 +7,10 @@ export default class OmokCanvas {
         // 캔버스 사이즈
         this.width = width;
         this.height = height;
+        this.ratio = width / height;
+
+        this.displayWidth = width;
+        this.displayHeight = height;
 
         // 랜더러
         this.renderer = PIXI.autoDetectRenderer(width, height, {
@@ -26,6 +30,58 @@ export default class OmokCanvas {
 
         // 스테이지
         this.graphics = new PIXI.Container();
+        this.graphics.interactive = true;
+
+        // 이벤트 핸들러 리스트
+        this.mouseMoveHandlers = [];
+        this.mouseClickHandlers = [];
+
+        // 이벤트 리스너 등록
+        this.graphics.on("mousemove", (event) => {
+            for (let i in this.mouseMoveHandlers) {
+                this.mouseMoveHandlers[i](this.globalToLocal(event.data.originalEvent.clientX, event.data.originalEvent.clientY));
+            }
+        })
+        this.graphics.on("click", (event) => {
+            for (let i in this.mouseClickHandlers) {
+                this.mouseClickHandlers[i](this.globalToLocal(event.data.originalEvent.clientX, event.data.originalEvent.clientY));
+            }
+        })
+
+        // 화면 크기 조정
+        window.addEventListener("resize", (event) => {
+            this.resizeRendererView(window.innerWidth, window.innerHeight);
+        });
+        this.resizeRendererView(window.innerWidth, window.innerHeight)
+    }
+
+    globalToLocal(x, y) {
+        let offset = this._cumulativeOffset(this.renderer.view);
+        let localX = this.width * (x - offset.left) / this.displayWidth;
+        let localY = this.height * (y - offset.top) / this.displayHeight;
+        return { x: localX, y: localY };
+    }
+
+    _cumulativeOffset(element) {
+        let top = 0, left = 0;
+        do {
+            top += element.offsetTop || 0;
+            left += element.offsetLeft || 0;
+            element = element.offsetParent;
+        } while (element);
+
+        return {
+            top: top,
+            left: left
+        };
+    };
+
+    onMouseMove(eventHandler) {
+        this.mouseMoveHandlers.push(eventHandler);
+    }
+
+    onMouseClick(eventHandler) {
+        this.mouseClickHandlers.push(eventHandler);
     }
 
     /**
@@ -42,4 +98,22 @@ export default class OmokCanvas {
     removeElement(element) {
         this.graphics.removeChild(element.graphics);
     }
+
+    resizeRendererView(width, height) {
+
+        var viewWidth, viewHeight;
+
+        if (width / height >= this.ratio) {
+            viewWidth = height * this.ratio;
+            viewHeight = height;
+        } else {
+            viewWidth = width;
+            viewHeight = width / this.ratio;
+        }
+        this.displayWidth = viewWidth * 0.9;
+        this.displayHeight = viewHeight * 0.9;
+        this.renderer.view.style.width = this.displayWidth + 'px';
+        this.renderer.view.style.height = this.displayHeight + 'px';
+    }
+
 }
