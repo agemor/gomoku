@@ -44,7 +44,7 @@ export default class OmokGame {
         this.board.placeStone(this.mm, gridPosition.x, gridPosition.y);
         this.mm = !this.mm;
 
-        console.log(this.algorithm.checkDoubleThree(gridPosition.x, gridPosition.y, this.board));
+        console.log(this.algorithm.checkValidity(gridPosition.x, gridPosition.y, this.board));
     }
 
 

@@ -30,10 +30,20 @@ export default class OmokAlgorithm {
         return check(-1, 0, 1, 0) || check(0, -1, 0, 1) || check(-1, -1, 1, 1) || check(1, -1, -1, 1);
     }
 
+    checkValidity(x, y, board) {
+        // 삼삼 체크
+        let notDoubleThree = !this.checkDoubleN(x, y, board, 3);
+
+        // 사사 체크
+        let notDoubleFour = !this.checkDoubleN(x, y, board, 4);
+        
+        return notDoubleThree && notDoubleFour;
+    }
+
     /**
-     * 쌍삼 체크
+     * NN 체크
      */
-    checkDoubleThree(x, y, board) {
+    checkDoubleN(x, y, board, n) {
 
         // 돌 연산자
         let at = (sx, sy) => board.placement[sy * board.boardSize + sx];
@@ -46,43 +56,55 @@ export default class OmokAlgorithm {
         // 한쪽 방향으로 열림성 검사
         let traverse = function (a, b) {
             let i = 0;
-            let count = 0;
             let stuck = true;
+            let spaces = [];
             while (true) {
                 if (!inbound(x + a * (i + 1), y + b * (i + 1))) break;
                 if (at(x + a * (i + 1), y + b * (i + 1)) == opponent) break;
-                if (at(x + a * i, y + b * i) == criterion) count++;
+                if (at(x + a * i, y + b * i) == 0) spaces.push([x + a * i, y + b * i]);
                 if (at(x + a * (i + 1), y + b * (i + 1)) == 0 && at(x + a * i, y + b * i) == 0) {
                     stuck = false;
                     break;
                 }
                 i++;
             }
-            return { length: i, count: count, stuck: stuck };
+            return { length: i, stuck: stuck, spaces: spaces };
         }
 
-        // 열린3 검사
-        let checkOpenThree = function (a, b, c, d) {
+        // 재귀적 금수 검사
+        let checkRecursive = (sx, sy) => {
+            let boardClone = board.placement.slice(0);
+            boardClone[sy * board.boardSize + sx] = criterion;
+            return this.checkValidity(sx, sy, { placement: boardClone, boardSize: board.boardSize });
+        }
+
+        // 열린 N 검사
+        let checkOpenN = function (a, b, c, d) {
 
             let p = traverse(a, b);
             let q = traverse(c, d);
             let lsum = p.length + q.length;
-            let csum = p.count + q.count;
+            let csum = p.spaces.length + q.spaces.length - 2;
 
             if (at(x + a * p.length, y + b * p.length) == 0
                 && at(x + c * q.length, y + d * q.length) == 0) {
 
-                // 또 각 빈칸이 금수점인지 체크. 금수점이면 false return.
-                if (lsum == 4 && csum == 4) return true;
-                if (lsum == 5 && csum == 4 && !(p.stuck && q.stuck)) return true;
+                if (lsum == n + 1 && csum == 0) {
+                    return (checkRecursive(p.spaces[0][0], p.spaces[0][1])
+                        || checkRecursive(q.spaces[0][0], q.spaces[0][1]));
+                }
+                if (lsum == n + 2 && csum == 1 && !(p.stuck && q.stuck)) {
+                    let target = p.spaces.length > 1 ? p.spaces : q.spaces;
+                    return checkRecursive(target[1][0], target[1][1]);
+                }
                 return false;
             } else {
                 return false;
             }
         }
-        
-        return (checkOpenThree(-1, 0, 1, 0) + checkOpenThree(0, -1, 0, 1)
-            + checkOpenThree(-1, -1, 1, 1) + checkOpenThree(1, -1, -1, 1)) > 1
+
+        return (checkOpenN(-1, 0, 1, 0) + checkOpenN(0, -1, 0, 1)
+            + checkOpenN(-1, -1, 1, 1) + checkOpenN(1, -1, -1, 1)) > 1
         /**
          * 열린4: 양쪽 모두가 막히지 않은 4
          * 열린3: 하나 두면 열린 4가 만들어 지는 것
@@ -157,13 +179,6 @@ export default class OmokAlgorithm {
                             return  5 <= hl + hr || hl + hr <= 6;
                         }
                         */
-
     }
 
-
-
-
-    checkDoubleFour() {
-
-    }
 }
