@@ -1,14 +1,15 @@
 import * as PIXI from "pixi.js";
 import OmokResource from "./OmokResource";
+import OmokStone from "./OmokStone";
 
 export default class OmokBoard {
-    constructor(boardSize = 18) {
+    constructor(gridSize, boardSize = 18) {
+
+        // 그리드 사이즈
+        this.gridSize = gridSize;
 
         // 오목판 사이즈
         this.boardSize = boardSize;
-
-        // 그리드 사이즈
-        this.gridSize = 35;
 
         // 화점 사이즈
         this.flowerDotSize = 4;
@@ -21,8 +22,31 @@ export default class OmokBoard {
 
         this.resources = new OmokResource();
 
+        // 놓여진 돌들
+        this.placedStones = [];
+        for (let i = 0; i < boardSize * boardSize; i++) {
+            this.placedStones.push(null);
+        }
+
         this.drawBoardTexture();
         this.drawBoardGridLines();
+    }
+
+    placeStone(stoneColor, x, y) {
+        // 이미 놓여진 돌이 있는지 검사
+        if (this.placedStones[x + this.boardSize * y] == null) {
+            let stone = new OmokStone(stoneColor);
+            stone.graphics.x = this.gridSize * (x + 1);
+            stone.graphics.y = this.gridSize * (y + 1);
+            this.graphics.addChild(stone.graphics);
+        }
+    }
+
+    displaceStone(x, y) {
+        if (this.placedStones[x + this.boardSize * y] != null) {
+            this.graphics.removeChild(this.placedStones[x + this.boardSize * y]);
+            this.placedStones[x + this.boardSize * y] = null;
+        }
     }
 
     drawBoardTexture() {

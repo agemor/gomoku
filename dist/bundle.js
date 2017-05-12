@@ -19753,9 +19753,13 @@ var OmokGame = function () {
             this.resources = new _OmokResource2.default();
 
             this.resources.load(function () {
-                _this.board = new _OmokBoard2.default();
+                _this.board = new _OmokBoard2.default(35);
                 _this.canvas.addElement(_this.board);
+
+                _this.board.placeStone(true, 3, 3);
             });
+
+            // 이벤트 리스너 등록
         }
     }, {
         key: "getDOMElement",
@@ -20764,6 +20768,10 @@ var _OmokResource = __webpack_require__(192);
 
 var _OmokResource2 = _interopRequireDefault(_OmokResource);
 
+var _OmokStone = __webpack_require__(193);
+
+var _OmokStone2 = _interopRequireDefault(_OmokStone);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
@@ -20771,16 +20779,16 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var OmokBoard = function () {
-    function OmokBoard() {
-        var boardSize = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 18;
+    function OmokBoard(gridSize) {
+        var boardSize = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 18;
 
         _classCallCheck(this, OmokBoard);
 
+        // 그리드 사이즈
+        this.gridSize = gridSize;
+
         // 오목판 사이즈
         this.boardSize = boardSize;
-
-        // 그리드 사이즈
-        this.gridSize = 35;
 
         // 화점 사이즈
         this.flowerDotSize = 4;
@@ -20793,11 +20801,36 @@ var OmokBoard = function () {
 
         this.resources = new _OmokResource2.default();
 
+        // 놓여진 돌들
+        this.placedStones = [];
+        for (var i = 0; i < boardSize * boardSize; i++) {
+            this.placedStones.push(null);
+        }
+
         this.drawBoardTexture();
         this.drawBoardGridLines();
     }
 
     _createClass(OmokBoard, [{
+        key: "placeStone",
+        value: function placeStone(stoneColor, x, y) {
+            // 이미 놓여진 돌이 있는지 검사
+            if (this.placedStones[x + this.boardSize * y] == null) {
+                var stone = new _OmokStone2.default(stoneColor);
+                stone.graphics.x = this.gridSize * (x + 1);
+                stone.graphics.y = this.gridSize * (y + 1);
+                this.graphics.addChild(stone.graphics);
+            }
+        }
+    }, {
+        key: "displaceStone",
+        value: function displaceStone(x, y) {
+            if (this.placedStones[x + this.boardSize * y] != null) {
+                this.graphics.removeChild(this.placedStones[x + this.boardSize * y]);
+                this.placedStones[x + this.boardSize * y] = null;
+            }
+        }
+    }, {
         key: "drawBoardTexture",
         value: function drawBoardTexture() {
             var boardTexture = this.resources.get("OMOK_BOARD_TEXTURE").texture;
@@ -40791,6 +40824,73 @@ var OmokResources = function () {
 }();
 
 exports.default = OmokResources;
+
+/***/ }),
+/* 193 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _pixi = __webpack_require__(34);
+
+var PIXI = _interopRequireWildcard(_pixi);
+
+var _OmokResource = __webpack_require__(192);
+
+var _OmokResource2 = _interopRequireDefault(_OmokResource);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var OmokStone = function () {
+
+    /**
+     * 검은색: false
+     * 하얀색: true
+     */
+    function OmokStone() {
+        var stoneColor = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+
+        _classCallCheck(this, OmokStone);
+
+        // 돌 색깔
+        this.stoneColor = stoneColor;
+
+        this.stoneSize = 30;
+
+        // 그래픽 인터페이스
+        this.graphics = new PIXI.Container();
+
+        this.resources = new _OmokResource2.default();
+
+        this.drawStone();
+    }
+
+    _createClass(OmokStone, [{
+        key: "drawStone",
+        value: function drawStone() {
+            var stoneTexture = this.resources.get(this.stoneColor ? "OMOK_STONE_BLACK" : "OMOK_STONE_WHITE").texture;
+            var stoneSprite = new PIXI.Sprite(stoneTexture);
+            stoneSprite.width = stoneSprite.height = this.stoneSize;
+            stoneSprite.anchor.set(0.5, 0.5);
+            this.graphics.addChild(stoneSprite);
+        }
+    }]);
+
+    return OmokStone;
+}();
+
+exports.default = OmokStone;
 
 /***/ })
 /******/ ]);

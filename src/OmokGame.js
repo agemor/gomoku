@@ -13,9 +13,14 @@ export default class OmokGame {
         this.resources = new OmokResource();
 
         this.resources.load(() => {
-            this.board = new OmokBoard();
+            this.board = new OmokBoard(35);
             this.canvas.addElement(this.board);
+
+            this.board.placeStone(true, 3, 3);
         });
+
+        // 이벤트 리스너 등록
+        
     }
 
     getDOMElement() {
