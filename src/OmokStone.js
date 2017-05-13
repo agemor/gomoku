@@ -4,8 +4,8 @@ import OmokResource from "./OmokResource";
 export default class OmokStone {
 
     /**
-     * 검은색: false
-     * 하얀색: true
+     * 검은색: true
+     * 하얀색: false
      */
     constructor(stoneColor = true, hinting = false) {
 

@@ -10,17 +10,15 @@ export default class OmokGame {
     }
 
     initialize() {
-        this.canvas = new OmokCanvas(800, 800);
+        this.canvas = new OmokCanvas(30 * 20, 30* 20);
         this.resources = new OmokResource();
         this.algorithm = new OmokAlgorithm();
 
         this.resources.load(() => {
-            this.board = new OmokBoard(35);
+            this.board = new OmokBoard(30);
             this.canvas.addElement(this.board);
-
-            this.board.placeStone(true, 3, 3);
         });
-        this.mm = false;
+        this.turn = true;
         // 이벤트 리스너 등록
         this.canvas.onMouseMove((event) => {
             this.onMouseMove(event);
@@ -32,23 +30,33 @@ export default class OmokGame {
     }
 
     onMouseMove(event) {
-        let gridPosition = this.board.getGridPosition(event.x, event.y); 
+        let gridPosition = this.board.getGridPosition(event.x, event.y);
 
         this.board.placeHintStone(true, gridPosition.x, gridPosition.y);
     }
 
     onMouseClick(event) {
-        
-        let gridPosition = this.board.getGridPosition(event.x, event.y); 
 
-        this.board.placeStone(this.mm, gridPosition.x, gridPosition.y);
-        this.mm = !this.mm;
+        let gridPosition = this.board.getGridPosition(event.x, event.y);
 
-        console.log(this.algorithm.checkValidity(gridPosition.x, gridPosition.y, this.board));
+        let isVictory = this.algorithm.checkVictory(gridPosition.x, gridPosition.y, this.turn ? 1 : 2, this.board);
+        let isValid = this.algorithm.checkValidity(gridPosition.x, gridPosition.y, this.turn ? 1 : 2, this.board);
+
+        if (!isValid) {
+            alert("금수입니다.");
+        } else {
+            this.board.placeStone(this.turn, gridPosition.x, gridPosition.y);
+
+            if (isVictory) {
+                alert((this.turn ? "흑" : "백") + "의 승리입니다.");
+            }
+            this.turn = !this.turn;
+        }
+
     }
 
 
-   
+
     getDOMElement() {
         return this.canvas.renderer.view;
     }
