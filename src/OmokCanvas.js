@@ -47,18 +47,14 @@ export default class OmokCanvas {
                 this.mouseClickHandlers[i](this.globalToLocal(event.data.originalEvent.clientX, event.data.originalEvent.clientY));
             }
         })
-
-        // 화면 크기 조정
-        window.addEventListener("resize", (event) => {
-            this.resizeRendererView(window.innerWidth, window.innerHeight);
-        });
-        this.resizeRendererView(window.innerWidth, window.innerHeight)
     }
 
     globalToLocal(x, y) {
+        let scrollX = document.body.scrollLeft;
+        let scrollY = document.body.scrollTop;
         let offset = this._cumulativeOffset(this.renderer.view);
-        let localX = this.width * (x - offset.left) / this.displayWidth;
-        let localY = this.height * (y - offset.top) / this.displayHeight;
+        let localX = this.width * (x - offset.left + scrollX) / this.displayWidth;
+        let localY = this.height * (y - offset.top + scrollY) / this.displayHeight;
         return { x: localX, y: localY };
     }
 
@@ -88,6 +84,14 @@ export default class OmokCanvas {
      * 화면 갱신 시 처리될 명령들
      */
     update() {
+
+        let parentElement = this.renderer.view.parentElement;
+
+        if (this.pivotWidth != parentElement.clientWidth && parentElement != undefined) {
+            this.pivotWidth = parentElement.clientWidth;
+            this.resizeRendererView(this.pivotWidth, this.pivotWidth);
+        }
+
         this.renderer.render(this.graphics);
     }
 
@@ -110,8 +114,8 @@ export default class OmokCanvas {
             viewWidth = width;
             viewHeight = width / this.ratio;
         }
-        this.displayWidth = viewWidth * 0.9;
-        this.displayHeight = viewHeight * 0.9;
+        this.displayWidth = viewWidth// * 0.9;
+        this.displayHeight = viewHeight// * 0.9;
         this.renderer.view.style.width = this.displayWidth + 'px';
         this.renderer.view.style.height = this.displayHeight + 'px';
     }

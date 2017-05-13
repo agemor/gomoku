@@ -5,12 +5,13 @@ import OmokBoard from "./OmokBoard";
 import OmokAlgorithm from "./OmokAlgorithm";
 
 export default class OmokGame {
+
     constructor() {
         this.initialize();
     }
 
     initialize() {
-        this.canvas = new OmokCanvas(30 * 20, 30* 20);
+        this.canvas = new OmokCanvas(30 * 20, 30 * 20);
         this.resources = new OmokResource();
         this.algorithm = new OmokAlgorithm();
 
@@ -25,8 +26,7 @@ export default class OmokGame {
         });
         this.canvas.onMouseClick((event) => {
             this.onMouseClick(event);
-        })
-
+        });
     }
 
     onMouseMove(event) {
@@ -54,7 +54,6 @@ export default class OmokGame {
         }
 
     }
-
 
 
     getDOMElement() {
