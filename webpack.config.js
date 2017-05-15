@@ -2,10 +2,13 @@ var path = require('path');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-    entry: './src/index.js',
+    entry: {
+        lobby: './src/lobby.js',
+        game: './src/game.js',
+    },
     output: {
         path: path.resolve(__dirname, "dist"),
-        filename: 'bundle.js',
+        filename: '[name].bundle.js',
     },
 
     devServer: {
@@ -23,7 +26,9 @@ module.exports = {
     },
     plugins: [
         new CopyWebpackPlugin([
-            { from: 'src/index.html' },
+            { from: 'src/game.html' },
+            { from: 'src/lobby.html', to: 'index.html' },
+            { from: 'src/skeleton.css' },
             { from: 'src/images', to: 'images' }
         ]),
     ]
