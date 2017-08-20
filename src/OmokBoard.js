@@ -31,8 +31,8 @@ export default class OmokBoard {
         }
 
         // 포석 힌트
-        this.hintStoneBlack = new OmokStone(false, true);
-        this.hintStoneWhite = new OmokStone(true, true);
+        this.hintStoneBlack = new OmokStone(OmokStone.BLACK, true);
+        this.hintStoneWhite = new OmokStone(OmokStone.WHITE, true);
 
         this.drawBoardTexture();
         this.drawBoardGridLines();
@@ -40,22 +40,22 @@ export default class OmokBoard {
 
     placeHintStone(stoneColor, x, y) {
         this.displaceHintStone(stoneColor);
-        if (stoneColor) {
-            this.hintStoneWhite.graphics.x = this.gridSize * (x + 1);
-            this.hintStoneWhite.graphics.y = this.gridSize * (y + 1);
-            this.graphics.addChild(this.hintStoneWhite.graphics);
-        } else {
+        if (stoneColor == OmokStone.BLACK) {
             this.hintStoneBlack.graphics.x = this.gridSize * (x + 1);
             this.hintStoneBlack.graphics.y = this.gridSize * (y + 1);
             this.graphics.addChild(this.hintStoneBlack.graphics);
-        }
+        } else {
+            this.hintStoneWhite.graphics.x = this.gridSize * (x + 1);
+            this.hintStoneWhite.graphics.y = this.gridSize * (y + 1);
+            this.graphics.addChild(this.hintStoneWhite.graphics);
+        } 
     }
 
     displaceHintStone(stoneColor) {
-        if (stoneColor) {
-            this.graphics.removeChild(this.hintStoneWhite.graphics);
-        } else {
+        if (stoneColor == OmokStone.BLACK) {
             this.graphics.removeChild(this.hintStoneBlack.graphics);
+        } else {
+            this.graphics.removeChild(this.hintStoneWhite.graphics);
         }
     }
 
@@ -67,7 +67,7 @@ export default class OmokBoard {
             stone.graphics.y = this.gridSize * (y + 1);
             this.graphics.addChild(stone.graphics);
 
-            this.placement[x + this.boardSize * y] = stoneColor ? 1 : 2;
+            this.placement[x + this.boardSize * y] = (stoneColor == OmokStone.BLACK) ? 1 : 2;
             this.placedStones[x + this.boardSize * y] = stone;
         }
     }

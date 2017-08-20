@@ -41,10 +41,6 @@ game.onServerConnected(()=>{
     statusText.textContent = "게임 불러오는 중...";
 });
 
-statusText.textContent = roomId + "///////" + roomToken;
-
-
-
 let gameContainer = document.getElementById("game");
 gameContainer.appendChild(game.getDOMElement());
 

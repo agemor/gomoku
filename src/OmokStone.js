@@ -3,11 +3,7 @@ import OmokResource from "./OmokResource";
 
 export default class OmokStone {
 
-    /**
-     * 검은색: true
-     * 하얀색: false
-     */
-    constructor(stoneColor = true, hinting = false) {
+    constructor(stoneColor, hinting = false) {
 
         // 돌 색깔
         this.stoneColor = stoneColor;
@@ -25,7 +21,7 @@ export default class OmokStone {
     }
 
     drawStone() {
-        let stoneTexture = this.resources.get(this.stoneColor ? "OMOK_STONE_WHITE" : "OMOK_STONE_BLACK").texture;
+        let stoneTexture = this.resources.get(this.stoneColor == OmokStone.BLACK ? "OMOK_STONE_BLACK" : "OMOK_STONE_WHITE").texture;
         let stoneSprite = new PIXI.Sprite(stoneTexture);
         stoneSprite.width = stoneSprite.height = this.stoneSize;
         stoneSprite.anchor.set(0.5, 0.5);
@@ -36,5 +32,7 @@ export default class OmokStone {
 
         this.graphics.addChild(stoneSprite);
     }
-
 }
+
+OmokStone.BLACK = "black";
+OmokStone.WHITE = "white";

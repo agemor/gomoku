@@ -130,7 +130,7 @@ export default class OmokGame {
             }
 
             let coord = this.fromStringCoordinate(gameData.move);
-            this.board.placeStone(gameData.stoneColor == "white", coord.x, coord.y);
+            this.board.placeStone(gameData.stoneColor, coord.x, coord.y);
             this.myTurn = true;
             if (gameData.gameEnd) {
                 alert("패배하였습니다.");
@@ -164,7 +164,7 @@ export default class OmokGame {
 
     onMouseMove(event) {
         let gridPosition = this.board.getGridPosition(event.x, event.y);
-        this.board.placeHintStone(this.stoneColor == "white", gridPosition.x, gridPosition.y);
+        this.board.placeHintStone(this.stoneColor, gridPosition.x, gridPosition.y);
     }
 
     onMouseClick(event) {
@@ -175,13 +175,13 @@ export default class OmokGame {
 
         let gridPosition = this.board.getGridPosition(event.x, event.y);
 
-        let isVictory = this.algorithm.checkVictory(gridPosition.x, gridPosition.y, this.stoneColor == "black" ? 1 : 2, this.board);
-        let isValid = this.algorithm.checkValidity(gridPosition.x, gridPosition.y, this.stoneColor == "black" ? 1 : 2, this.board);
+        let isVictory = this.algorithm.checkVictory(gridPosition.x, gridPosition.y, this.stoneColor, this.board);
+        let isValid = this.algorithm.checkValidity(gridPosition.x, gridPosition.y, this.stoneColor, this.board);
 
         if (!isValid) {
             alert("이 자리는 금수입니다.");
         } else {
-            this.board.placeStone(this.stoneColor == "white", gridPosition.x, gridPosition.y);
+            this.board.placeStone(this.stoneColor, gridPosition.x, gridPosition.y);
 
             this.serverConnection.emit("play move", this.gameToken, this.roomId, this.toStringCoordinate(gridPosition))
             this.myTurn = false;
