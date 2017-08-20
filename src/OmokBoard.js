@@ -85,12 +85,14 @@ export default class OmokBoard {
         let gridX = Math.round((x - this.gridSize) / this.gridSize);
         let gridY = Math.round((y - this.gridSize) / this.gridSize);
 
+        let isOut = n => n < 0 || n >= this.boardSize;
         let checkBoundary = n => n < 0 ? 0 : (n >= this.boardSize ? this.boardSize - 1 : n);
 
+        let out = isOut(gridX) || isOut(gridY);
         gridX = checkBoundary(gridX);
         gridY = checkBoundary(gridY);
 
-        return { x: gridX, y: gridY };
+        return { x: gridX, y: gridY, out: out };
     }
 
     drawBoardTexture() {

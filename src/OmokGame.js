@@ -163,8 +163,17 @@ export default class OmokGame {
     }
 
     onMouseMove(event) {
+
+        if (!this.board) {
+            return;
+        }
+
         let gridPosition = this.board.getGridPosition(event.x, event.y);
-        this.board.placeHintStone(this.stoneColor, gridPosition.x, gridPosition.y);
+        if (gridPosition.out) {
+             this.board.displaceHintStone(this.stoneColor);
+        } else {
+            this.board.placeHintStone(this.stoneColor, gridPosition.x, gridPosition.y);
+        }
     }
 
     onMouseClick(event) {
