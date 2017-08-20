@@ -17,7 +17,7 @@ if (roomId == undefined) {
 }
 
 // 게임 서버 접속
-game.connectServer("http://localhost:5555");
+game.connectServer("http://192.168.0.19:5555");
 statusText.textContent = "서버 접속 중...";
 
 game.onServerClosed((error)=>{
@@ -49,4 +49,4 @@ function getUrlParams() {
     let params = {};
     let parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi,(m,key,value) => params[key] = value);
     return params;
-  }
+}

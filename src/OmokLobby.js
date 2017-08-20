@@ -6,7 +6,6 @@ export default class OmokLobby {
         this.serverConnectionHandlers = [];
         this.serverDisconnectionHandlers = [];
         this.serverErrorHandlers = [];
-        this.opponentFoundHandlers = [];
     }
 
     connectServer(host) {
@@ -34,10 +33,18 @@ export default class OmokLobby {
 
     findOpponent(callback) {
         this.serverConnection.emit('find opponent');
-        this.serverConnection.on('room created',  (roomToken, roomId)=>{
-            for (let i in this.opponentFoundHandlers) {
-                this.opponentFoundHandlers[i](roomToken, roomId);
-            }
+        this.serverConnection.on('room created',  (roomId, roomToken)=>{
+            callback(roomId, roomToken);
+        });
+    }
+
+    getRandomRoom(callback) {
+        this.serverConnection.emit('get random room id');
+        this.serverConnection.on('random room id',  (roomId)=>{
+            callback(roomId);
+        });
+        this.serverConnection.on('no random room',  ()=>{
+            callback(null);
         });
     }
 
@@ -51,9 +58,5 @@ export default class OmokLobby {
 
     onServerDisconnected(handler) {
         this.serverDisconnectionHandlers.push(handler);
-    }
-
-    onOpponentFound(handler) {
-        this.opponentFoundHandlers.push(handler);
     }
 }

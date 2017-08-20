@@ -3,20 +3,25 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Omok</title>
-
+    <title>오목 온라인</title>
     <link rel="stylesheet" href="./skeleton.css">
-
 </head>
 
 <body>
-
-    <div class="container">
-
-        <h3>오목 온라인</h3>
-        <p id="statusText">페이지 로드 중...</p>
+<div class="outer">
+    <div class="middle">
+        <div class="inner">
+            <h3>오목 온라인</h3>
+            <p id="statusText" style="margin-top: 60px">페이지 로드 중...</p>
+            <div style="margin-top: 25px">
+                <input id="nicknameInputText" type="text" placeholder="닉네임 입력">
+                <button id="startButton">시작하기</button>
+            </div>
+            <a id="observeButton" href="#">랜덤 관전하기</a>
+        </div>
     </div>
-    <script src="lobby.bundle.js"></script>
+</div>
+<script src="lobby.bundle.js"></script>
 </body>
 
 </html>

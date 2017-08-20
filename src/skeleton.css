@@ -35,6 +35,26 @@
   margin: 0 auto;
   padding: 0 20px;
   box-sizing: border-box; }
+
+.outer {
+    display: table;
+    position: absolute;
+    height: 95%;
+    width: 95%;
+}
+
+.middle {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.inner {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    width: 300px
+}
+
 .column,
 .columns {
   width: 100%;
@@ -161,7 +181,10 @@ a {
   color: #1EAEDB; }
 a:hover {
   color: #0FA0CE; }
-
+a:disabled, a[disabled] {
+   pointer-events: none;
+   color: #D1D1D1;
+}
 
 /* Buttons
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
@@ -175,11 +198,8 @@ input[type="button"] {
   padding: 0 30px;
   color: #555;
   text-align: center;
-  font-size: 11px;
   font-weight: 600;
   line-height: 38px;
-  letter-spacing: .1rem;
-  text-transform: uppercase;
   text-decoration: none;
   white-space: nowrap;
   background-color: transparent;
@@ -221,7 +241,11 @@ input[type="button"].button-primary:focus {
   color: #FFF;
   background-color: #1EAEDB;
   border-color: #1EAEDB; }
-
+button:disabled,
+button[disabled]{
+  border: 1px solid #D1D1D1;
+  color: #D1D1D1;
+}
 
 /* Forms
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
