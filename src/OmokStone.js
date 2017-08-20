@@ -25,7 +25,7 @@ export default class OmokStone {
     }
 
     drawStone() {
-        let stoneTexture = this.resources.get(this.stoneColor ? "OMOK_STONE_BLACK" : "OMOK_STONE_WHITE").texture;
+        let stoneTexture = this.resources.get(this.stoneColor ? "OMOK_STONE_WHITE" : "OMOK_STONE_BLACK").texture;
         let stoneSprite = new PIXI.Sprite(stoneTexture);
         stoneSprite.width = stoneSprite.height = this.stoneSize;
         stoneSprite.anchor.set(0.5, 0.5);
