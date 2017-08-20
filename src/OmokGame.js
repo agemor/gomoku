@@ -3,6 +3,7 @@ import io from "socket.io-client";
 import OmokResource from "./OmokResource";
 import OmokCanvas from "./OmokCanvas";
 import OmokBoard from "./OmokBoard";
+import OmokStone from "./OmokStone";
 import OmokAlgorithm from "./OmokAlgorithm";
 
 export default class OmokGame {
@@ -19,12 +20,17 @@ export default class OmokGame {
         this.resources.load(() => {
             this.board = new OmokBoard(30);
             this.canvas.addElement(this.board);
+
+            for (let i in this.loadHandler) {
+                this.loadHandler[i]();
+            }
         });
         this.turn = true;
 
         // 게임 관련 변수
         this.roomId = "";
         this.roomToken = "";
+        this.observerMode = false;
         this.gameStarted = false;
         this.myTurn = false;
         this.stoneColor = "";
@@ -45,6 +51,9 @@ export default class OmokGame {
         this.joinErrorHandlers = [];
         this.gameReadyHandlers = [];
         this.gameErrorHandlers = [];
+        this.turnChangeHandlers = [];
+        this.gameEndHandlers = [];
+        this.loadHandler = [];
     }
 
     connectServer(host) {
@@ -93,6 +102,12 @@ export default class OmokGame {
 
         this.serverConnection.on('game joined as observer', (gameData)=>{
 
+            this.gameStarted = true;
+            this.observerMode = true;
+
+            // 보드 세팅
+            this.board.recoverStones(gameData.board);
+
             for (let i in this.gameReadyHandlers) {
                 this.gameReadyHandlers[i](gameData);
             }
@@ -114,6 +129,10 @@ export default class OmokGame {
             for (let i in this.gameReadyHandlers) {
                 this.gameReadyHandlers[i](gameData);
             }
+
+            for (let i in this.turnChangeHandlers) {
+                this.turnChangeHandlers[i]({myTurn: this.myTurn, stoneColor: OmokStone.BLACK});
+            }
         });
 
         this.serverConnection.on('play move failed', (errorData)=>{
@@ -124,18 +143,38 @@ export default class OmokGame {
 
         this.serverConnection.on('stone placed', (gameData)=>{
 
-            
-            if (gameData.stoneColor == this.stoneColor) {
+            if (gameData.stoneColor == this.stoneColor && !this.observerMode) {
                 return;
             }
 
             let coord = this.fromStringCoordinate(gameData.move);
             this.board.placeStone(gameData.stoneColor, coord.x, coord.y);
             this.myTurn = true;
+
+            for (let i in this.turnChangeHandlers) {
+                this.turnChangeHandlers[i]({myTurn: true, previousPlacement: gameData.move,
+                    stoneColor: gameData.stoneColor == OmokStone.BLACK ? OmokStone.WHITE : OmokStone.BLACK});
+            }
+
             if (gameData.gameEnd) {
-                alert("패배하였습니다.");
+                for (let i in this.gameEndHandlers) {
+                    this.gameEndHandlers[i]({victory: false});
+                }
+                this.gameStarted = false;
             }
         });
+    }
+
+    onLoad(handler) {
+        this.loadHandler.push(handler);
+    }
+
+    onTurnChanged(handler) {
+        this.turnChangeHandlers.push(handler);
+    }
+
+    onGameEnd(handler) {
+        this.gameEndHandlers.push(handler);
     }
 
     onJoinError(handler) {
@@ -178,7 +217,7 @@ export default class OmokGame {
 
     onMouseClick(event) {
 
-        if (!(this.gameStarted && this.myTurn)) {
+        if (!(this.gameStarted && this.myTurn && !this.observerMode)) {
             return;
         }
 
@@ -194,18 +233,24 @@ export default class OmokGame {
 
             this.serverConnection.emit("play move", this.gameToken, this.roomId, this.toStringCoordinate(gridPosition))
             this.myTurn = false;
+            for (let i in this.turnChangeHandlers) {
+                this.turnChangeHandlers[i]({myTurn: false});
+            }
             if (isVictory) {
-                alert("승리하였습니다.");
+                for (let i in this.gameEndHandlers) {
+                    this.gameEndHandlers[i]({victory: true});
+                }
+                this.gameStarted = false;
             }
         }
     }
     
     toStringCoordinate(coord) {
-        return String.fromCharCode(coord.x + 97) + String(coord.y);
+        return String.fromCharCode(coord.x + 97) + String(coord.y + 1);
     }
 
     fromStringCoordinate(coord) {
-        return {x: coord.charCodeAt(0) - 97, y: Number(coord.slice(1))};
+        return {x: coord.charCodeAt(0) - 97, y: Number(coord.slice(1)) - 1};
     }
 
     getDOMElement() {

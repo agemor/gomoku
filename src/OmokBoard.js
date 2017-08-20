@@ -51,12 +51,9 @@ export default class OmokBoard {
         } 
     }
 
-    displaceHintStone(stoneColor) {
-        if (stoneColor == OmokStone.BLACK) {
-            this.graphics.removeChild(this.hintStoneBlack.graphics);
-        } else {
-            this.graphics.removeChild(this.hintStoneWhite.graphics);
-        }
+    displaceHintStone() {
+        this.graphics.removeChild(this.hintStoneBlack.graphics);
+        this.graphics.removeChild(this.hintStoneWhite.graphics);
     }
 
     placeStone(stoneColor, x, y) {
@@ -81,6 +78,24 @@ export default class OmokBoard {
         }
     }
 
+    recoverStones(boardData) {
+
+        this.boardSize = boardData.boardSize;
+        this.placement = boardData.placement;
+
+        this.clearBoard();
+        this.drawBoardTexture();
+        this.drawBoardGridLines();
+
+        for (let i = 0; i < this.placement.length; i++) {
+            if (this.placement[i] > 0) {
+                let x = i % this.boardSize;
+                let y = Math.floor(i / this.boardSize);
+                this.placeStone(this.placement[i] == 1 ? OmokStone.BLACK : OmokStone.WHITE, x, y);
+            }
+        }
+    }
+
     getGridPosition(x, y, offsetX = 0, offsetY = 0) {
         let gridX = Math.round((x - this.gridSize) / this.gridSize);
         let gridY = Math.round((y - this.gridSize) / this.gridSize);
@@ -93,6 +108,12 @@ export default class OmokBoard {
         gridY = checkBoundary(gridY);
 
         return { x: gridX, y: gridY, out: out };
+    }
+
+    clearBoard() {
+        for (let i = this.graphics.children.length - 1; i >= 0; i--) {
+            this.graphics.removeChild(this.graphics.children[i]);
+        }
     }
 
     drawBoardTexture() {

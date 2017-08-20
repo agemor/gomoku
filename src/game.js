@@ -16,9 +16,10 @@ if (roomId == undefined) {
     window.location.assign("./");
 }
 
-// 게임 서버 접속
-game.connectServer("http://192.168.0.19:5555");
-statusText.textContent = "서버 접속 중...";
+game.onLoad(()=>{
+    game.connectServer("http://192.168.0.19:5555");
+    statusText.textContent = "서버 접속 중...";
+})
 
 game.onServerClosed((error)=>{
     statusText.textContent = "서버가 닫혀 있습니다.";
@@ -33,6 +34,30 @@ game.onServerConnected(()=>{
 
     game.onGameReady((gameData)=>{
         statusText.textContent = "게임을 시작합니다.";
+    });
+
+    game.onTurnChanged((gameData)=>{
+        if (game.observerMode) {
+
+        } else {
+            if (gameData.myTurn) {
+                statusText.textContent = "";
+                if (gameData.previousPlacement != null) {
+                    statusText.textContent = "상대방이 " + gameData.previousPlacement + "에 두었습니다. ";
+                }
+                statusText.textContent += "당신의 차례입니다.";
+            } else {
+                statusText.textContent = "상대방의 차례입니다.";
+            }
+        }
+    });
+
+    game.onGameEnd((gameData)=>{
+        if (gameData.victory) {
+            statusText.textContent = "당신이 승리하였습니다!";
+        } else {
+            statusText.textContent = "상대방이 승리하였습니다!";
+        }
     });
 
     game.onGameError((errorData)=>{
