@@ -26,6 +26,7 @@
     "webpack-dev-server": "^2.4.5"
   },
   "dependencies": {
+    "korean-name-generator": "^1.0.1",
     "pixi.js": "^4.5.1",
     "socket.io-client": "^2.0.1"
   }
