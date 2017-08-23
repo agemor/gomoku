@@ -246,6 +246,8 @@ export default class OmokGame {
         // 정지일 경우 무시
         if (this.room.paused) return;
 
+        if (this.board.isPlaced(coord.x, coord.y)) return;
+
         // 금수인지 미리 체크
         let isValid = this.algorithm.checkValidity(coord.x, coord.y, this.player.stoneColor, this.board);
 
@@ -344,8 +346,6 @@ export default class OmokGame {
     }
 
     onMouseClick(event) {
-
-        this.socket.emit("hi server");
 
        if (!this.connected || this.player == null || this.room == null) return;
 

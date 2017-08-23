@@ -34,19 +34,19 @@ let setStatus = (text) => {
 }
 
 // 카운트다운 유틸리티
-let previousCountdown = null;
+let previousCountdown;
 
 let showCountdown = (nickname, timeLeft) => {
 
-    if (previousCountdown != null) {
-        clearInterval(previousCountdown);
-    }
+    stopCountdown();
 
     previousCountdown = setInterval(() => {
 
-        setStatus(nickname + "님 차례입니다. (" + (timeLeft--) + "초 남음)");
-        console.log(timeLeft);
-        if (timeLeft <= 0) stopCountdown();
+        statusText.textContent = nickname + "님 차례입니다. (" + (timeLeft--) + "초 남음)";
+
+        if (timeLeft <= 0) {
+            stopCountdown();
+        }
 
     }, 1000);
 }
@@ -108,12 +108,11 @@ game.onServerConnected(() => {
         game.joinRoom(roomId, roomKey, playerId, playerKey, (joinSuccess) => {
 
             if (!joinSuccess) {
-                setStatus("방에 입장할 수 없습니다." + game.recentErrorMessage);
+                setStatus("방에 입장할 수 없습니다. (" + game.recentErrorMessage + ")");
                 return;
             }
 
             addWelcomeMessage();
-            setStatus(game.room.getPlayerNicknameByStoneColor(game.room.turn) + " 님 차례입니다.");
             showCountdown(game.room.getPlayerNicknameByStoneColor(game.room.turn), 30);
         });
     }

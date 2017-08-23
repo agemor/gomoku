@@ -14,7 +14,7 @@ export default class OmokCanvas {
 
         // 랜더러
         this.renderer = PIXI.autoDetectRenderer(width, height, {
-            backgroundColor: 0xFFFF00,
+            backgroundColor: 0xFFFFFF,
             antialias: false,
             transparent: false,
             resolution: 1,
