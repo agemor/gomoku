@@ -12,4 +12,8 @@ export default class OmokRoom {
         this.turn = "";
         this.gameOver = false;
     }
+
+    getPlayerNicknameByStoneColor(stoneColor) {
+        return this.playerNicknames[this.playerStoneColors.indexOf(stoneColor)];
+    }
 }

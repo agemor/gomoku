@@ -1,11 +1,67 @@
 import OmokGame from "./OmokGame";
+import OmokStone from "./OmokStone";
 
 let host = "http://192.168.0.19:5555";
 
 // DOM 객체 레퍼런스
+let messageText = document.getElementById("messageText");
 let statusText = document.getElementById("statusText");
 
-let setStatus = (text) => statusText.textContent = text;
+// URL 파싱 유틸리티
+let getUrlParams = () => {
+    let params = {};
+    let parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi,(m,key,value) => params[key] = value);
+    return params;
+}
+
+// 메시지 표시 유틸리티
+let messageHistory = [];
+
+let addMessage = (text) => {
+
+    if (messageHistory.length > 1) messageHistory.shift();
+    messageHistory.push(text);
+
+    messageText.innerHTML = messageHistory.join("<br/>");
+}
+
+// 상태 표시 유틸리티
+let setStatus = (text) => {
+
+    stopCountdown();
+
+    statusText.textContent = text;
+}
+
+// 카운트다운 유틸리티
+let previousCountdown = null;
+
+let showCountdown = (nickname, timeLeft) => {
+
+    if (previousCountdown != null) {
+        clearInterval(previousCountdown);
+    }
+
+    previousCountdown = setInterval(() => {
+
+        setStatus(nickname + "님 차례입니다. (" + (timeLeft--) + "초 남음)");
+
+        if (timeLeft <= 0) stopCountdown();
+
+    }, 1000);
+
+    return countdown;
+}
+
+let stopCountdown = () => {
+
+    if (previousCountdown != null) {
+
+        clearInterval(previousCountdown);
+
+        previousCountdown = null;
+    }
+}
 
 // 게임 객체 생성
 let game = new OmokGame();
@@ -35,62 +91,65 @@ game.onServerClosed((error) => {
 
 game.onServerConnected(() => {
 
+    if (roomKey != null && playerId != null && playerKey != null) {
 
-    game.join
+        let toKorean = (stoneColor) => (stoneColor == OmokStone.BLACK ? "흑" : "백");
 
+        // 시작 메시지 보여주기
+        let addWelcomeMessage = () => {
 
+            let welcomeMessage = game.room.playerNicknames[0] + "(" + toKorean(game.room.playerStoneColors[0]) + ")";
+            welcomeMessage += "님과 ";
+            welcomeMessage += game.room.playerNicknames[1] + "(" + toKorean(game.room.playerStoneColors[1]) + ")";
+            welcomeMessage += "님의 승부가 시작되었습니다.";
 
+            addMessage(welcomeMessage);
+        }
 
-    //
+        // 게임방에 플레이어로 입장
+        game.joinRoom(roomId, roomKey, playerId, playerKey, (joinSuccess) => {
 
-
-
-    game.joinGame(roomId, roomToken);
-
-    game.onJoinError((errorData)=>{
-        statusText.textContent = "게임을 불러오지 못했습니다. (" + errorData.message + ")";
-    });
-
-    game.onGameReady((gameData)=>{
-        statusText.textContent = "게임을 시작합니다.";
-    });
-
-    game.onTurnChanged((gameData)=>{
-        if (game.observerMode) {
-
-        } else {
-            if (gameData.myTurn) {
-                statusText.textContent = "";
-                if (gameData.previousPlacement != null) {
-                    statusText.textContent = "상대방이 " + gameData.previousPlacement + "에 두었습니다. ";
-                }
-                statusText.textContent += "당신의 차례입니다.";
-            } else {
-                statusText.textContent = "상대방의 차례입니다.";
+            if (!joinSuccess) {
+                setStatus("방에 입장할 수 없습니다.");
+                return;
             }
-        }
+
+            addWelcomeMessage();            
+            showCountdown(game.room.getPlayerNicknameByStoneColor(game.room.turn), 30);
+        });
+    }
+
+    else {
+
+        // 게임방에 관전자로 입장
+        game.observeRoom(roomId, (observeSuccess) => {
+
+            if (!observeSuccess) {
+                setStatus("방을 관전할 수 없습니다.");
+                return;
+            }
+
+            addWelcomeMessage();            
+            showCountdown(game.room.getPlayerNicknameByStoneColor(game.room.turn), 30);
+        });
+    }
+
+    game.onStonePlaced((placementData) => {
+        addMessage(game.room.getPlayerNicknameByStoneColor(placementData.stoneColor) + "님이 " + placementData.coord.toUpperCase() + "에 두었습니다.");
+        showCountdown(game.room.getPlayerNicknameByStoneColor(game.room.turn), 30);
     });
 
-    game.onGameEnd((gameData)=>{
-        if (gameData.victory) {
-            statusText.textContent = "당신이 승리하였습니다!";
-        } else {
-            statusText.textContent = "상대방이 승리하였습니다!";
-        }
+    game.onPlayerDisconnected((nickname) => {
+        addMessage(nickname + "님과의 연결이 끊어졌습니다. 15초 간 기다립니다.");
     });
 
-    game.onGameError((errorData)=>{
-        statusText.textContent = "게임 오류가 발생하였습니다. (" + errorData.message + ")";
+    game.onGameOver((gameData) => {
+        setStatus(game.room.getPlayerNicknameByStoneColor(gameData.win) + "님이 승리하였습니다!");
     });
-    statusText.textContent = "게임 불러오는 중...";
+   
+    setStatus("게임 불러오는 중...");
 });
 
 let gameContainer = document.getElementById("game");
 gameContainer.appendChild(game.getDOMElement());
 
-
-function getUrlParams() {
-    let params = {};
-    let parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi,(m,key,value) => params[key] = value);
-    return params;
-}

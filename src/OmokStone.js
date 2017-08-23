@@ -36,3 +36,6 @@ export default class OmokStone {
 
 OmokStone.BLACK = "black";
 OmokStone.WHITE = "white";
+OmokStone.complement = function(color) {
+    return color == OmokStone.BLACK ? OmokStone.WHITE : OmokStone.BLACK;
+}

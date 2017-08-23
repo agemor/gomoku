@@ -61,6 +61,7 @@ export default class OmokGame {
         this.serverMessageHandlers = [];
         this.loadHandlers = [];
         this.stonePlacementHandlers = [];
+        this.playerDisconnectedHandlers = [];
         this.gameOverHandlers = [];
     }
 
@@ -113,6 +114,13 @@ export default class OmokGame {
 
             for (let i in this.stonePlacementHandlers) {
                 this.stonePlacementHandlers[i](placementData);
+            }
+        });
+
+        this.socket.on("player disconnected", (nickname) => {
+
+            for (let i in this.playerDisconnectedHandlers) {
+                this.playerDisconnectedHandlers[i](nickname);
             }
         });
 
@@ -180,7 +188,7 @@ export default class OmokGame {
 
         this.socket.emit("observe room", roomId);
 
-        this.socket.on("room observeed",  (gameData) => {
+        this.socket.on("room observed",  (gameData) => {
 
             this.observerMode = true;
 
@@ -242,7 +250,7 @@ export default class OmokGame {
             });
 
             // 턴 넘기기
-            this.room.turn = this.player.stoneColor == OmokStone.BLACK ? OmokStone.WHITE : OmokStone.BLACK;
+            this.room.turn = OmokStone.complement(this.player.stoneColor);
 
             for (let i in this.stonePlacementHandlers) {
 
@@ -266,7 +274,7 @@ export default class OmokGame {
         
         this.board.placeStone(placementData.stoneColor, coord.x, coord.y);
 
-        this.room.turn = this.player.stoneColor;
+        this.room.turn = OmokStone.complement(placementData.stoneColor);
     }
 
     gameOver(gameData) {
@@ -279,6 +287,10 @@ export default class OmokGame {
 
     onStonePlaced(handler) {
         this.stonePlacementHandlers.push(handler);
+    }
+
+    onPlayerDisconnected(handler) {
+        this.playerDisconnectedHandlers.push(handler);
     }
 
     onGameOver(handler) {
@@ -303,46 +315,26 @@ export default class OmokGame {
 
     onMouseMove(event) {
 
-        if (!this.board) {
-            return;
-        }
+        if (!this.board || !this.connected || this.player == null || this.room == null) return;
 
         let gridPosition = this.board.getGridPosition(event.x, event.y);
+
         if (gridPosition.out) {
              this.board.displaceHintStone(this.stoneColor);
-        } else {
+        }
+        
+        else {
             this.board.placeHintStone(this.stoneColor, gridPosition.x, gridPosition.y);
         }
     }
 
     onMouseClick(event) {
 
-        if (!(this.gameStarted && this.myTurn && !this.observerMode)) {
-            return;
-        }
+       if (!this.connected || this.player == null || this.room == null) return;
 
         let gridPosition = this.board.getGridPosition(event.x, event.y);
 
-        let isVictory = this.algorithm.checkVictory(gridPosition.x, gridPosition.y, this.stoneColor, this.board);
-        let isValid = this.algorithm.checkValidity(gridPosition.x, gridPosition.y, this.stoneColor, this.board);
-
-        if (!isValid) {
-            alert("이 자리는 금수입니다.");
-        } else {
-            this.board.placeStone(this.stoneColor, gridPosition.x, gridPosition.y);
-
-            this.socket.emit("play move", this.gameToken, this.roomId, this.toStringCoordinate(gridPosition))
-            this.myTurn = false;
-            for (let i in this.turnChangeHandlers) {
-                this.turnChangeHandlers[i]({myTurn: false});
-            }
-            if (isVictory) {
-                for (let i in this.gameEndHandlers) {
-                    this.gameEndHandlers[i]({victory: true});
-                }
-                this.gameStarted = false;
-            }
-        }
+        this.placeStone(gridPosition);
     }
     
     toStringCoordinate(coord) {
