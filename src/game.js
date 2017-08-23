@@ -89,20 +89,20 @@ game.onServerClosed((error) => {
 
 game.onServerConnected(() => {
 
+    let toKorean = (stoneColor) => (stoneColor == OmokStone.BLACK ? "흑" : "백");
+
+    // 시작 메시지 보여주기
+    let addWelcomeMessage = () => {
+
+        let welcomeMessage = game.room.playerNicknames[0] + "(" + toKorean(game.room.playerStoneColors[0]) + ")";
+        welcomeMessage += "님과 ";
+        welcomeMessage += game.room.playerNicknames[1] + "(" + toKorean(game.room.playerStoneColors[1]) + ")";
+        welcomeMessage += "님의 승부가 시작되었습니다.";
+
+        addMessage(welcomeMessage);
+    }
+
     if (roomKey != null && playerId != null && playerKey != null) {
-
-        let toKorean = (stoneColor) => (stoneColor == OmokStone.BLACK ? "흑" : "백");
-
-        // 시작 메시지 보여주기
-        let addWelcomeMessage = () => {
-
-            let welcomeMessage = game.room.playerNicknames[0] + "(" + toKorean(game.room.playerStoneColors[0]) + ")";
-            welcomeMessage += "님과 ";
-            welcomeMessage += game.room.playerNicknames[1] + "(" + toKorean(game.room.playerStoneColors[1]) + ")";
-            welcomeMessage += "님의 승부가 시작되었습니다.";
-
-            addMessage(welcomeMessage);
-        }
 
         // 게임방에 플레이어로 입장
         game.joinRoom(roomId, roomKey, playerId, playerKey, (joinSuccess) => {

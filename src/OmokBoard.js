@@ -70,7 +70,7 @@ export default class OmokBoard {
     }
 
     isPlaced(x, y) {
-        return this.placedStones[x + this.boardSize * y] == null;
+        return this.placedStones[x + this.boardSize * y] != null;
     }
 
     displaceStone(x, y) {
