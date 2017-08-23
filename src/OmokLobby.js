@@ -136,7 +136,7 @@ export default class OmokLobby {
         if (this.roomId == null) return;
 
         let url = "./game.html?roomId=" + this.roomId;
-        url += this.roomKey != null ? "&key=" + this.roomKey : "";
+        url += this.roomKey != null ? "&roomKey=" + this.roomKey : "";
         url += this.loggined ? "&playerId=" + this.playerId + "&playerKey=" + this.playerKey : "";
 
         window.location.assign(url);

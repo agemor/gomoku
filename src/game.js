@@ -45,12 +45,10 @@ let showCountdown = (nickname, timeLeft) => {
     previousCountdown = setInterval(() => {
 
         setStatus(nickname + "님 차례입니다. (" + (timeLeft--) + "초 남음)");
-
+        console.log(timeLeft);
         if (timeLeft <= 0) stopCountdown();
 
     }, 1000);
-
-    return countdown;
 }
 
 let stopCountdown = () => {
@@ -110,11 +108,12 @@ game.onServerConnected(() => {
         game.joinRoom(roomId, roomKey, playerId, playerKey, (joinSuccess) => {
 
             if (!joinSuccess) {
-                setStatus("방에 입장할 수 없습니다.");
+                setStatus("방에 입장할 수 없습니다." + game.recentErrorMessage);
                 return;
             }
 
-            addWelcomeMessage();            
+            addWelcomeMessage();
+            setStatus(game.room.getPlayerNicknameByStoneColor(game.room.turn) + " 님 차례입니다.");
             showCountdown(game.room.getPlayerNicknameByStoneColor(game.room.turn), 30);
         });
     }
@@ -141,6 +140,10 @@ game.onServerConnected(() => {
 
     game.onPlayerDisconnected((nickname) => {
         addMessage(nickname + "님과의 연결이 끊어졌습니다. 15초 간 기다립니다.");
+    });
+
+    game.onPlayerReconnected((nickname) => {
+        addMessage(nickname + "님이 다시 접속하였습니다. 게임을 재개합니다.");
     });
 
     game.onGameOver((gameData) => {

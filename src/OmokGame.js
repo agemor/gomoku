@@ -62,6 +62,7 @@ export default class OmokGame {
         this.loadHandlers = [];
         this.stonePlacementHandlers = [];
         this.playerDisconnectedHandlers = [];
+        this.playerReconnectedHandlers = [];
         this.gameOverHandlers = [];
     }
 
@@ -110,7 +111,7 @@ export default class OmokGame {
 
         this.socket.on("stone placed", (placementData) => {
 
-            updateBoard(placementData);
+            this.updateBoard(placementData);
 
             for (let i in this.stonePlacementHandlers) {
                 this.stonePlacementHandlers[i](placementData);
@@ -119,19 +120,32 @@ export default class OmokGame {
 
         this.socket.on("player disconnected", (nickname) => {
 
+           if (this.room != null) this.room.paused = true;
+
             for (let i in this.playerDisconnectedHandlers) {
                 this.playerDisconnectedHandlers[i](nickname);
             }
         });
 
+        this.socket.on("player reconnected", (nickname) => {
+
+            if (this.room != null) this.room.paused = false;
+
+            for (let i in this.playerReconnectedHandlers) {
+                this.playerReconnectedHandlers[i](nickname);
+            }
+        });
+
         this.socket.on("game over", (gameData) => {
 
-            gameOver(gameData);
+            this.gameOver(gameData);
 
             for (let i in this.gameOverHandlers) {
                 this.gameOverHandlers[i](gameData);
             }
         });
+
+        this.socket.on("hi client", () => {console.log("server said hi")})
     }
 
     /**
@@ -155,6 +169,9 @@ export default class OmokGame {
         this.socket.on("room joined",  (gameData) => {
 
             this.player.stoneColor = gameData.stoneColor;
+
+            this.room.playerNicknames = gameData.nicknames;
+            this.room.playerStoneColors = gameData.stoneColors;
             this.room.turn = gameData.turn;
 
             // 재접속일 경우 게임판 복구
@@ -226,6 +243,9 @@ export default class OmokGame {
         // 자신의 턴이 아닐 경우 무시
         if (this.room.turn != this.player.stoneColor) return;
 
+        // 정지일 경우 무시
+        if (this.room.paused) return;
+
         // 금수인지 미리 체크
         let isValid = this.algorithm.checkValidity(coord.x, coord.y, this.player.stoneColor, this.board);
 
@@ -238,27 +258,18 @@ export default class OmokGame {
 
             this.board.placeStone(this.player.stoneColor, coord.x, coord.y);
 
-            this.socket.emit("place stone", room.id, room.key, player.id, player.key, this.toStringCoordinate(coord));
-
+            this.socket.emit("place stone", this.room.id, this.room.key, this.player.id, this.player.key, this.toStringCoordinate(coord));
             this.socket.on("cannot place stone", (error) => {
 
                 this.room.turn = this.player.stoneColor;
 
                 this.recentErrorMessage = error.message;
-
+                console.log(error.message);
                 callback(false);
             });
 
             // 턴 넘기기
             this.room.turn = OmokStone.complement(this.player.stoneColor);
-
-            for (let i in this.stonePlacementHandlers) {
-
-                this.stonePlacementHandlers[i]({
-                    stoneColor: this.player.stoneColor,
-                    coord: this.toStringCoordinate(coord)
-                });
-            }
         }
     }
 
@@ -293,6 +304,10 @@ export default class OmokGame {
         this.playerDisconnectedHandlers.push(handler);
     }
 
+    onPlayerReconnected(handler) {
+        this.playerReconnectedHandlers.push(handler);
+    }
+
     onGameOver(handler) {
         this.gameOverHandlers.push(handler);
     }
@@ -320,15 +335,17 @@ export default class OmokGame {
         let gridPosition = this.board.getGridPosition(event.x, event.y);
 
         if (gridPosition.out) {
-             this.board.displaceHintStone(this.stoneColor);
+             this.board.displaceHintStone(this.player.stoneColor);
         }
         
         else {
-            this.board.placeHintStone(this.stoneColor, gridPosition.x, gridPosition.y);
+            this.board.placeHintStone(this.player.stoneColor, gridPosition.x, gridPosition.y);
         }
     }
 
     onMouseClick(event) {
+
+        this.socket.emit("hi server");
 
        if (!this.connected || this.player == null || this.room == null) return;
 

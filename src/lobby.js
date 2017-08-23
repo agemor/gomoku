@@ -21,12 +21,11 @@ let lobby = new OmokLobby();
 lobby.connectServer(host);
 setStatus("서버 접속 중...");
 
-lobby.onServerClosed((error)=>{
+lobby.onServerClosed((error) => {
     setStatus("아쉽게도 지금은 서버가 닫혀 있습니다.");
 });
 
-lobby.onServerConnected(()=>{
-    connected = true;
+lobby.onServerConnected(() => {
     setStatus("지금 바로 게임을 시작해 보세요!");
 });
 
