@@ -5,6 +5,8 @@ import OmokCanvas from "./OmokCanvas";
 import OmokBoard from "./OmokBoard";
 import OmokStone from "./OmokStone";
 import OmokAlgorithm from "./OmokAlgorithm";
+import OmokRoom from "./OmokRoom";
+import OmokPlayer from "./OmokPlayer";
 
 export default class OmokGame {
 
@@ -12,29 +14,39 @@ export default class OmokGame {
         this.initialize();
     }
 
+    /**
+     * 초기화
+     */
     initialize() {
+
+        // 오목 코어
         this.canvas = new OmokCanvas(30 * 20, 30 * 20);
         this.resources = new OmokResource();
         this.algorithm = new OmokAlgorithm();
 
+        // 서버 상태 정보
+        this.connected = false;
+        this.recentErrorMessage = "";
+
+        // 유저 인증 정보
+        this.loggined = false;
+        this.player = null;
+
+        // 방 입장 정보
+        this.roomJoined = false;
+        this.room = null;
+
+        // 그래픽 로드
         this.resources.load(() => {
+
             this.board = new OmokBoard(30);
+
             this.canvas.addElement(this.board);
 
-            for (let i in this.loadHandler) {
-                this.loadHandler[i]();
+            for (let i in this.loadHandlers) {
+                this.loadHandlers[i]();
             }
         });
-        this.turn = true;
-
-        // 게임 관련 변수
-        this.roomId = "";
-        this.roomToken = "";
-        this.observerMode = false;
-        this.gameStarted = false;
-        this.myTurn = false;
-        this.stoneColor = "";
-        this.gameToken = "";
 
         // 이벤트 리스너 등록
         this.canvas.onMouseMove((event) => {
@@ -48,145 +60,195 @@ export default class OmokGame {
         this.serverConnectionHandlers = [];
         this.serverDisconnectionHandlers = [];
         this.serverErrorHandlers = [];
-        this.joinErrorHandlers = [];
-        this.gameReadyHandlers = [];
-        this.gameErrorHandlers = [];
-        this.turnChangeHandlers = [];
-        this.gameEndHandlers = [];
-        this.loadHandler = [];
+        this.serverMessageHandlers = [];
+        this.loadHandlers = [];
+        this.stonePlacementHandlers = [];
+        this.gameOverHandlers = [];
     }
 
+    /**
+     * 게임 서버에 접속한다.
+     * 
+     * @param {string} host 
+     */
     connectServer(host) {
-        this.serverConnection = io.connect(host);
-        this.serverConnection.on('connect', () => {
+
+        this.socket = io.connect(host);
+
+        this.socket.on("connect", () => {
+
+            this.connected = true;
+
             for (let i in this.serverConnectionHandlers) {
-                this.serverConnectionHandlers[i](this.serverConnection.connected);
+                this.serverConnectionHandlers[i](this.socket.connected);
             }
         });
-        this.serverConnection.on('disconnect', () => {
+
+        this.socket.on("disconnect", () => {
+
+            this.connected = false;
+
             for (let i in this.serverDisconnectionHandlers) {
                 this.serverDisconnectionHandlers[i]();
             }
-        })
-        this.serverConnection.on('connect_error', (error) => {
+        });
+
+        this.socket.on("connect_error", (error) => {
+
+            this.connected = false;
+
             for (let i in this.serverErrorHandlers) {
                 this.serverErrorHandlers[i](error);
             }
-        })
-        this.serverConnection.on('status', function (data) {
-            console.log(data);
-            socket.emit('my other event', { my: 'data' });
+        });
+
+        this.socket.on("server message", (data) => {
+
+            for (let i in this.serverMessageHandlers) {
+                this.serverMessageHandlers[i](data.message);
+            }
+        });
+
+        this.socket.on("stone placed", (placementData) => {
+
+            updateBoard(placementData);
+
+            for (let i in this.stonePlacementHandlers) {
+                this.stonePlacementHandlers[i](placementData);
+            }
+        });
+
+        this.socket.on("game over", (gameData) => {
+
+            gameOver(gameData);
+
+            for (let i in this.gameOverHandlers) {
+                this.gameOverHandlers[i](gameData);
+            }
         });
     }
 
-    joinGame(roomId, token) {
+    /**
+     * 게임 방에 입장한다.
+     * 
+     * @param {string} roomId 
+     * @param {string} roomKey 
+     * @param {string} playerId 
+     * @param {string} playerKey
+     * @param {function} callback 
+     */
+    joinRoom(roomId, roomKey, playerId, playerKey, callback) {
 
-        this.roomId = roomId;
-        this.roomToken = token;
+        if (!this.connected) return;
 
-        // 게임 플레이어
-        if (token != undefined && String(token).length > 1) {
-            this.serverConnection.emit('join', roomId, token);
-        }
+        this.room = new OmokRoom(roomId, roomKey);
+        this.player = new OmokPlayer(playerId, playerKey);
+
+        this.socket.emit("join room", roomId, roomKey, playerId, playerKey);
+
+        this.socket.on("room joined",  (gameData) => {
+
+            this.roomJoined = true;
+
+            this.player.stoneColor = gameData.stoneColor;
+            this.room.turn = gameData.turn;
+
+            // 재접속일 경우 게임판 복구
+            if (gameData.board != null) {
+                this.board.recoverStones(gameData.board);
+            }
+
+            callback(true);
+        });
+
+        this.socket.on("cannot join room", (error) => {
+
+            this.roomJoined = false;
+            this.recentErrorMessage = error.message;
+
+            callback(false);
+        });
+    }
+
+    /**
+     * 판에 돌을 놓는다.
+     * 
+     * @param {array} coord 
+     * @param {function} callback 
+     */
+    placeStone(coord, callback) {
+
+        // 게임이 끝났을 경우 무시
+        if (this.room.gameOver || !this.roomJoined) return;
+
+        // 자신의 턴이 아닐 경우 무시
+        if (this.room.turn != this.player.stoneColor) return;
+
+        // 금수인지 미리 체크
+        let isValid = this.algorithm.checkValidity(coord.x, coord.y, this.player.stoneColor, this.board);
+
+        if (!isValid) {
+
+            alert("이 자리는 금수입니다.");
+        } 
         
-        // 게임 옵저버
         else {
-            this.serverConnection.emit('join', roomId);
+
+            this.board.placeStone(this.player.stoneColor, coord.x, coord.y);
+
+            this.socket.emit("place stone", room.id, room.key, player.id, player.key, this.toStringCoordinate(coord));
+
+            this.socket.on("cannot place stone", (error) => {
+
+                this.room.turn = this.player.stoneColor;
+
+                this.recentErrorMessage = error.message;
+
+                callback(false);
+            });
+
+            // 턴 넘기기
+            this.room.turn = this.player.stoneColor == OmokStone.BLACK ? OmokStone.WHITE : OmokStone.BLACK;
+
+            for (let i in this.stonePlacementHandlers) {
+
+                this.stonePlacementHandlers[i]({
+                    stoneColor: this.player.stoneColor,
+                    coord: this.toStringCoordinate(coord)
+                });
+            }
         }
+    }
 
-        this.serverConnection.on('join failed', (errorData)=>{
-            for (let i in this.joinErrorHandlers) {
-                this.joinErrorHandlers[i](errorData);
-            }
-        });
+    updateBoard(placementData) {
 
-        this.serverConnection.on('game joined as observer', (gameData)=>{
+        // 게임이 끝났을 경우 무시
+        if (this.room.gameOver) return;
 
-            this.gameStarted = true;
-            this.observerMode = true;
+        // 자신이 둔 수는 무시
+        if (!this.observerMode && placementData.stoneColor == this.player.stoneColor) return;
 
-            // 보드 세팅
-            this.board.recoverStones(gameData.board);
+        let coord = this.fromStringCoordinate(placementData.coord);
+        
+        this.board.placeStone(placementData.stoneColor, coord.x, coord.y);
 
-            for (let i in this.gameReadyHandlers) {
-                this.gameReadyHandlers[i](gameData);
-            }
-        });
+        this.room.turn = this.player.stoneColor;
+    }
 
-        this.serverConnection.on('game ready', (gameData)=>{
-
-            this.gameToken = gameData.gameToken;
-            this.stoneColor = gameData.stoneColor;
-
-            // 게임 시작
-            this.gameStarted = true;
-            if (this.stoneColor == "black") {
-                this.myTurn = true;
-            } else {
-                this.myTurn = false;
-            }
-
-            for (let i in this.gameReadyHandlers) {
-                this.gameReadyHandlers[i](gameData);
-            }
-
-            for (let i in this.turnChangeHandlers) {
-                this.turnChangeHandlers[i]({myTurn: this.myTurn, stoneColor: OmokStone.BLACK});
-            }
-        });
-
-        this.serverConnection.on('play move failed', (errorData)=>{
-            for (let i in this.gameErrorHandlers) {
-                this.gameErrorHandlers[i](errorData);
-            }
-        });
-
-        this.serverConnection.on('stone placed', (gameData)=>{
-
-            if (gameData.stoneColor == this.stoneColor && !this.observerMode) {
-                return;
-            }
-
-            let coord = this.fromStringCoordinate(gameData.move);
-            this.board.placeStone(gameData.stoneColor, coord.x, coord.y);
-            this.myTurn = true;
-
-            for (let i in this.turnChangeHandlers) {
-                this.turnChangeHandlers[i]({myTurn: true, previousPlacement: gameData.move,
-                    stoneColor: gameData.stoneColor == OmokStone.BLACK ? OmokStone.WHITE : OmokStone.BLACK});
-            }
-
-            if (gameData.gameEnd) {
-                for (let i in this.gameEndHandlers) {
-                    this.gameEndHandlers[i]({victory: false});
-                }
-                this.gameStarted = false;
-            }
-        });
+    gameOver(gameData) {
+        this.room.gameOver = true;
     }
 
     onLoad(handler) {
-        this.loadHandler.push(handler);
+        this.loadHandlers.push(handler);
     }
 
-    onTurnChanged(handler) {
-        this.turnChangeHandlers.push(handler);
+    onStonePlaced(handler) {
+        this.stonePlacementHandlers.push(handler);
     }
 
-    onGameEnd(handler) {
-        this.gameEndHandlers.push(handler);
-    }
-
-    onJoinError(handler) {
-        this.joinErrorHandlers.push(handler);
-    }
-
-    onGameReady(handler) {
-        this.gameReadyHandlers.push(handler);
-    }
-
-    onGameError(handler) {
-        this.gameErrorHandlers.push(handler);
+    onGameOver(handler) {
+        this.gameOverHandlers.push(handler);
     }
 
     onServerClosed(handler) {
@@ -199,6 +261,10 @@ export default class OmokGame {
 
     onServerDisconnected(handler) {
         this.serverDisconnectionHandlers.push(handler);
+    }
+
+    onServerMessage(handler) {
+        this.serverMessageHandlers.push(handler);
     }
 
     onMouseMove(event) {
@@ -231,7 +297,7 @@ export default class OmokGame {
         } else {
             this.board.placeStone(this.stoneColor, gridPosition.x, gridPosition.y);
 
-            this.serverConnection.emit("play move", this.gameToken, this.roomId, this.toStringCoordinate(gridPosition))
+            this.socket.emit("play move", this.gameToken, this.roomId, this.toStringCoordinate(gridPosition))
             this.myTurn = false;
             for (let i in this.turnChangeHandlers) {
                 this.turnChangeHandlers[i]({myTurn: false});
