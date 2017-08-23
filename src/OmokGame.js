@@ -32,6 +32,7 @@ export default class OmokGame {
         this.player = null;
 
         // 방 입장 정보
+        this.roomJoined = false;
         this.room = null;
 
         // 그래픽 로드
@@ -168,6 +169,7 @@ export default class OmokGame {
 
         this.socket.on("room joined",  (gameData) => {
 
+            this.roomJoined = true;
             this.player.stoneColor = gameData.stoneColor;
 
             this.room.playerNicknames = gameData.nicknames;
@@ -184,6 +186,7 @@ export default class OmokGame {
 
         this.socket.on("cannot join room", (error) => {
 
+            this.roomJoined = false;
             this.room = null;
             this.recentErrorMessage = error.message;
 
@@ -238,13 +241,13 @@ export default class OmokGame {
     placeStone(coord, callback) {
 
         // 게임이 끝났을 경우 무시
-        if (this.room.gameOver || this.player == null) return;
+        if (this.room.gameOver || this.player == null || this.room == null) return;
 
         // 자신의 턴이 아닐 경우 무시
         if (this.room.turn != this.player.stoneColor) return;
 
         // 정지일 경우 무시
-        if (this.room.paused) return;
+        if (this.room.paused || !this.roomJoined) return;
 
         if (this.board.isPlaced(coord.x, coord.y)) return;
 
@@ -351,7 +354,7 @@ export default class OmokGame {
 
         let gridPosition = this.board.getGridPosition(event.x, event.y);
 
-        this.placeStone(gridPosition);
+        this.placeStone(gridPosition, () => {});
     }
     
     toStringCoordinate(coord) {

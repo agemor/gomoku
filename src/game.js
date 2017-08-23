@@ -146,7 +146,12 @@ game.onServerConnected(() => {
     });
 
     game.onGameOver((gameData) => {
-        setStatus(game.room.getPlayerNicknameByStoneColor(gameData.win) + "님이 승리하였습니다!");
+
+        stopCountdown();
+
+        let message = (game.room.getPlayerNicknameByStoneColor(gameData.win) + "님이 승리하였습니다!");
+        message += " <a href='./'>돌아가기</a>";
+        statusText.innerHTML = message;
     });
    
     setStatus("게임 불러오는 중...");
