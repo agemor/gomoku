@@ -7,6 +7,8 @@ export default class OmokRoom {
         this.key = key;
 
         // 게임 데이터
+        this.playerNicknames = [];
+        this.playerStoneColors = [];
         this.turn = "";
         this.gameOver = false;
     }

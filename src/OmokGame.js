@@ -29,11 +29,9 @@ export default class OmokGame {
         this.recentErrorMessage = "";
 
         // 유저 인증 정보
-        this.loggined = false;
         this.player = null;
 
         // 방 입장 정보
-        this.roomJoined = false;
         this.room = null;
 
         // 그래픽 로드
@@ -148,8 +146,6 @@ export default class OmokGame {
 
         this.socket.on("room joined",  (gameData) => {
 
-            this.roomJoined = true;
-
             this.player.stoneColor = gameData.stoneColor;
             this.room.turn = gameData.turn;
 
@@ -163,11 +159,49 @@ export default class OmokGame {
 
         this.socket.on("cannot join room", (error) => {
 
-            this.roomJoined = false;
+            this.room = null;
             this.recentErrorMessage = error.message;
 
             callback(false);
         });
+    }
+
+    /**
+     * 게임 방을 관전한다.
+     * 
+     * @param {string} roomId 
+     * @param {function} callback 
+     */
+    observeRoom(roomId, callback) {
+
+        if (!this.connected || this.room != null) return;
+
+        this.room = new OmokRoom(roomId, "");
+
+        this.socket.emit("observe room", roomId);
+
+        this.socket.on("room observeed",  (gameData) => {
+
+            this.observerMode = true;
+
+            this.room.playerNicknames = gameData.nicknames;
+            this.room.playerStoneColors = gameData.stoneColors;
+            this.room.turn = gameData.turn;
+
+            this.board.recoverStones(gameData.board);
+
+            callback(true);
+        });
+
+        this.socket.on("cannot observe room", (error) => {
+
+            this.observerMode = false;
+            this.room = null;
+            this.recentErrorMessage = error.message;
+
+            callback(false);
+        });
+
     }
 
     /**
@@ -179,7 +213,7 @@ export default class OmokGame {
     placeStone(coord, callback) {
 
         // 게임이 끝났을 경우 무시
-        if (this.room.gameOver || !this.roomJoined) return;
+        if (this.room.gameOver || this.player == null) return;
 
         // 자신의 턴이 아닐 경우 무시
         if (this.room.turn != this.player.stoneColor) return;

@@ -1,14 +1,21 @@
 import OmokGame from "./OmokGame";
 
-// 상태 표시 텍스트
+let host = "http://192.168.0.19:5555";
+
+// DOM 객체 레퍼런스
 let statusText = document.getElementById("statusText");
 
-// 게임 생성
+let setStatus = (text) => statusText.textContent = text;
+
+// 게임 객체 생성
 let game = new OmokGame();
 
-// 게임 접속 정보
-let roomId = getUrlParams()["id"];
-let roomToken = getUrlParams()["token"];
+// 게임 접속 정보 읽어오기
+let urlParams = getUrlParams();
+let roomId = urlParams["roomId"];
+let roomKey = urlParams["roomKey"];
+let playerId = urlParams["playerId"];
+let playerKey = urlParams["playerKey"];
 
 if (roomId == undefined) {
 
@@ -16,16 +23,28 @@ if (roomId == undefined) {
     window.location.assign("./");
 }
 
-game.onLoad(()=>{
-    game.connectServer("http://192.168.0.19:5555");
-    statusText.textContent = "서버 접속 중...";
+game.onLoad(() => {
+
+    game.connectServer(host);
+    setStatus("서버 접속 중...");
 })
 
-game.onServerClosed((error)=>{
-    statusText.textContent = "서버가 닫혀 있습니다.";
+game.onServerClosed((error) => {
+    setStatus("서버가 닫혀 있습니다.");
 });
 
-game.onServerConnected(()=>{
+game.onServerConnected(() => {
+
+
+    game.join
+
+
+
+
+    //
+
+
+
     game.joinGame(roomId, roomToken);
 
     game.onJoinError((errorData)=>{
