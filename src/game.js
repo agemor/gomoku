@@ -1,7 +1,7 @@
 import OmokGame from "./OmokGame";
 import OmokStone from "./OmokStone";
 
-let host = "http://192.168.0.19:5555";
+let host = "http://52.231.31.17:7343/";
 
 // DOM 객체 레퍼런스
 let messageText = document.getElementById("messageText");

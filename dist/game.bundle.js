@@ -28120,7 +28120,7 @@ var _OmokStone2 = _interopRequireDefault(_OmokStone);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var host = "http://192.168.0.19:5555";
+var host = "http://omok-server.azurewebsites.net/";
 
 // DOM 객체 레퍼런스
 var messageText = document.getElementById("messageText");

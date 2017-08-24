@@ -1,7 +1,7 @@
 import KoreanNameGenerator from "korean-name-generator";
 import OmokLobby from "./OmokLobby";
 
-let host = "http://192.168.0.19:5555";
+let host = "http://52.231.31.17:7343/";
 
 // DOM 객체 레퍼런스
 let statusText = document.getElementById("statusText");
