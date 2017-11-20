@@ -110,7 +110,7 @@ export default class OmokLobby {
 
         this.socket.emit("find match", this.playerId, this.playerKey);
 
-        this.socket.on("match found",  (roomId, roomKey) => {
+        this.socket.on("match found", (roomId, roomKey) => {
 
             this.matchFound = true;
             this.roomId = roomId;
@@ -148,16 +148,14 @@ export default class OmokLobby {
 
         this.socket.emit('get random room');
 
-        this.socket.on('random room',  (roomId)=>{
+        this.socket.on('random room', (roomId) => {
 
             if (roomId != "") {
 
                 this.roomId = roomId;
 
                 callback(true);
-            }
-
-            else {
+            } else {
 
                 this.roomId = null;
 

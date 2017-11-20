@@ -48,7 +48,7 @@ export default class OmokBoard {
             this.hintStoneWhite.graphics.x = this.gridSize * (x + 1);
             this.hintStoneWhite.graphics.y = this.gridSize * (y + 1);
             this.graphics.addChild(this.hintStoneWhite.graphics);
-        } 
+        }
     }
 
     displaceHintStone() {
@@ -111,7 +111,11 @@ export default class OmokBoard {
         gridX = checkBoundary(gridX);
         gridY = checkBoundary(gridY);
 
-        return { x: gridX, y: gridY, out: out };
+        return {
+            x: gridX,
+            y: gridY,
+            out: out
+        };
     }
 
     clearBoard() {

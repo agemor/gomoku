@@ -41,7 +41,7 @@ let toggleWaiting = (waitingOn) => {
         nicknameInputText.disabled = true;
         startButton.disabled = true;
         observeButton.setAttribute('disabled', true);
-        
+
     } else {
 
         nicknameInputText.disabled = false;
@@ -69,7 +69,7 @@ function onStartClicked() {
         lobby.login(nickname, (loginSuccess) => {
 
             if (!loginSuccess) {
-                
+
                 toggleWaiting(false);
                 setStatus(lobby.getRecentErrorMessage());
 
@@ -80,7 +80,7 @@ function onStartClicked() {
             lobby.findMatch((findSuccess) => {
 
                 if (!findSuccess) {
-                    
+
                     toggleWaiting(false);
                     setStatus(lobby.getRecentErrorMessage());
 
@@ -107,7 +107,7 @@ function onObserveClicked() {
         lobby.getRandomRoom((getSuccess) => {
 
             if (!getSuccess) {
-                
+
                 toggleWaiting(false);
                 setStatus("현재 관전 가능한 방이 없습니다.");
 
