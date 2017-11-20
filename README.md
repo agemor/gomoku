@@ -10,3 +10,6 @@ Omok.io requires [Node.js](https://nodejs.org) to run.
 npm install
 npm start
 ```
+
+## License
+MIT
